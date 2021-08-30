@@ -11,13 +11,22 @@ CONFIG += c++11
 SOURCES += \
     src/main.cpp \
     src/mainwindow.cpp \
-    src/widgetDraw.cpp
+    src/widgetcalculation.cpp \
+    src/widgetdraw.cpp \
+    src/widgetrobotsettings.cpp \
+    src/widgettestsettings.cpp
 
 HEADERS += \
     include/mainwindow.h \
-    include/widgetDraw.h
+    include/widgetcalculation.h \
+    include/widgetdraw.h \
+    include/widgetrobotsettings.h \
+    include/widgettestsettings.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    res.qrc

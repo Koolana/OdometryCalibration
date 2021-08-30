@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/img">
+        <file>img/cw.png</file>
+        <file>img/ccw.png</file>
+    </qresource>
+</RCC>

@@ -6,7 +6,10 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 
-#include "widgetDraw.h"
+#include "widgetdraw.h"
+#include "widgetrobotsettings.h"
+#include "widgettestsettings.h"
+#include "widgetcalculation.h"
 
 class MainWindow : public QMainWindow
 {
@@ -20,6 +23,9 @@ private:
     QHBoxLayout* globalLayout;
 
     WidgetDraw* wd;
+    WidgetRobotSettings* wrs;
+    WidgetTestSettings* wts;
+    WidgetCalculation* wc;
 
     QPushButton* btnStart;
     QPushButton* btnStop;

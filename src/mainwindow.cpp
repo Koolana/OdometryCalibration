@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "include/mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -26,7 +26,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     drawLayout->addLayout(ctrlButtonsLayout);
 
-    globalLayout->addLayout(drawLayout);
+    globalLayout->addLayout(drawLayout, 5);
+
+    auto verticalLayout = new QVBoxLayout();
+
+    this->wrs = new WidgetRobotSettings();
+    verticalLayout->addWidget(this->wrs, 3);
+
+    this->wts = new WidgetTestSettings();
+    verticalLayout->addWidget(this->wts, 3);
+
+    this->wc = new WidgetCalculation();
+    verticalLayout->addWidget(this->wc, 7);
+
+    globalLayout->addLayout(verticalLayout, 1);
 
     auto central = new QWidget;
     central->setLayout(globalLayout);
