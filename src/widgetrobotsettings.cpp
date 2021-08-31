@@ -58,5 +58,5 @@ void WidgetRobotSettings::swapRotateDirection() {
         this->btnRotate->setIcon(this->ccwCircleArrow);
     }
 
-    emit changedRotate(this->isCW);
+    emit changedRotateDir(this->isCW);
 }

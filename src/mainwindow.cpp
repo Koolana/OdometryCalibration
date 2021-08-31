@@ -31,10 +31,12 @@ MainWindow::MainWindow(QWidget *parent)
     auto verticalLayout = new QVBoxLayout();
 
     this->wrs = new WidgetRobotSettings();
-    verticalLayout->addWidget(this->wrs, 3);
+    connect(this->wrs, SIGNAL(changedRotateDir(bool)), this->wd, SLOT(changeRotateDir(bool)));
+    verticalLayout->addWidget(this->wrs, 2);
 
     this->wts = new WidgetTestSettings();
-    verticalLayout->addWidget(this->wts, 3);
+    connect(this->wts, SIGNAL(sendTestData(TestData&)), this->wd, SLOT(changeTest(TestData&)));
+    verticalLayout->addWidget(this->wts, 2);
 
     this->wc = new WidgetCalculation();
     verticalLayout->addWidget(this->wc, 7);

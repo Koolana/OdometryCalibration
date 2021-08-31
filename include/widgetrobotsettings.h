@@ -35,7 +35,7 @@ private slots:
     void swapRotateDirection();
 
 signals:
-    void changedRotate(bool);
+    void changedRotateDir(bool);
     void savedParams(RobotParams&);
 };
 

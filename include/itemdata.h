@@ -31,7 +31,7 @@ private:
     OdomDataType data;
 
     void paintEvent(QPaintEvent* event) override;
-    void resizeEvent(QResizeEvent* event);
+    void resizeEvent(QResizeEvent* event) override;
 
 signals:
 
