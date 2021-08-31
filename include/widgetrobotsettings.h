@@ -8,6 +8,8 @@
 #include <QLabel>
 #include <QLineEdit>
 
+#include "odomdatatype.h"
+
 class WidgetRobotSettings : public QGroupBox
 {
     Q_OBJECT
@@ -29,7 +31,12 @@ private:
     bool isCW = true;
 
 private slots:
+    void saveParams();
     void swapRotateDirection();
+
+signals:
+    void changedRotate(bool);
+    void savedParams(RobotParams&);
 };
 
 #endif // WIDGETROBOTSETTINGS_H

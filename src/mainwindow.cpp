@@ -39,6 +39,12 @@ MainWindow::MainWindow(QWidget *parent)
     this->wc = new WidgetCalculation();
     verticalLayout->addWidget(this->wc, 7);
 
+    this->mca = new ModelCalibrationAlg();
+    connect(this->wrs, SIGNAL(savedParams(RobotParams&)), this->mca, SLOT(changeRobotWidth(RobotParams&)));
+    connect(this->wts, SIGNAL(sendTestData(TestData&)), this->mca, SLOT(changeTest(TestData&)));
+    connect(this->wc, SIGNAL(sendData(QVector<FullData>&)), this->mca, SLOT(calc(QVector<FullData>&)));
+    connect(this->mca, SIGNAL(sendResult(CalibrationResults&)), this->wc, SLOT(updateResult(CalibrationResults&)));
+
     globalLayout->addLayout(verticalLayout, 1);
 
     auto central = new QWidget;

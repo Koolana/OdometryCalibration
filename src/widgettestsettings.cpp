@@ -63,6 +63,10 @@ void WidgetTestSettings::changedTest() {
 }
 
 void WidgetTestSettings::choosedTest() {
-    qDebug() << this->currTestType;
-    qDebug() << this->leSize->text().toDouble();
+    TestData td;
+    td.numIter = 1;
+    td.size = this->leSize->text().toFloat();
+    td.typeTest = (Tests)this->currTestType;
+
+    emit sendTestData(td);
 }

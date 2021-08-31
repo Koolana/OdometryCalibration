@@ -10,6 +10,7 @@
 #include "widgetrobotsettings.h"
 #include "widgettestsettings.h"
 #include "widgetcalculation.h"
+#include "modelcalibrationalg.h"
 
 class MainWindow : public QMainWindow
 {
@@ -26,6 +27,8 @@ private:
     WidgetRobotSettings* wrs;
     WidgetTestSettings* wts;
     WidgetCalculation* wc;
+
+    ModelCalibrationAlg* mca;
 
     QPushButton* btnStart;
     QPushButton* btnStop;

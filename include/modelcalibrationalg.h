@@ -1,0 +1,27 @@
+#ifndef MODELCALIBRATIONALG_H
+#define MODELCALIBRATIONALG_H
+
+#include <QObject>
+#include <QtMath>
+#include "odomdatatype.h"
+
+class ModelCalibrationAlg : public QObject
+{
+    Q_OBJECT
+public:
+    explicit ModelCalibrationAlg(QObject *parent = nullptr);
+
+private:
+    Tests currentTest = Tests::ERROR;
+    float robot_width = 0;
+
+signals:
+    void sendResult(CalibrationResults&);
+
+public slots:
+    void calc(QVector<FullData>& data);
+    void changeTest(TestData&);
+    void changeRobotWidth(RobotParams&);
+};
+
+#endif // MODELCALIBRATIONALG_H

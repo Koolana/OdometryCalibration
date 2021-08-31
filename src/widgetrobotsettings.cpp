@@ -34,10 +34,19 @@ WidgetRobotSettings::WidgetRobotSettings()
     globalLayout->addWidget(this->leAngSpeed, 10, 0, 1, 4);
 
     this->btnSave = new QPushButton("Save");
-//    this->btnSave->clicked->connect(this->sendData);
+    connect(this->btnSave, SIGNAL(clicked()), this, SLOT(saveParams()));
     globalLayout->addWidget(this->btnSave, 11, 0, 1, 4);
 
     this->setLayout(this->globalLayout);
+}
+
+void WidgetRobotSettings::saveParams() {
+    RobotParams rp;
+    rp.width = this->leWidth->text().toFloat();
+    rp.linearSpeed = this->leLinSpeed->text().toFloat();
+    rp.angularSpeed = this->leAngSpeed->text().toFloat();
+
+    emit savedParams(rp);
 }
 
 void WidgetRobotSettings::swapRotateDirection() {
@@ -48,4 +57,6 @@ void WidgetRobotSettings::swapRotateDirection() {
     } else {
         this->btnRotate->setIcon(this->ccwCircleArrow);
     }
+
+    emit changedRotate(this->isCW);
 }

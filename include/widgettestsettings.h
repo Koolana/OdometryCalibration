@@ -9,6 +9,7 @@
 #include <QRadioButton>
 #include <QButtonGroup>
 #include <QString>
+#include "odomdatatype.h"
 
 class WidgetTestSettings : public QGroupBox
 {
@@ -25,6 +26,9 @@ private:
     QLineEdit* leNumIter;
 
     int currTestType = 0;
+
+signals:
+    void sendTestData(TestData&);
 
 private slots:
     void changedTest();
