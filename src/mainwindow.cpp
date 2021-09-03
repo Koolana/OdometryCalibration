@@ -47,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this->wc, SIGNAL(sendData(QVector<FullData>&)), this->mca, SLOT(calc(QVector<FullData>&)));
     connect(this->mca, SIGNAL(sendResult(CalibrationResults&)), this->wc, SLOT(updateResult(CalibrationResults&)));
 
+    this->mrc = new ModelRobotController();
+
     globalLayout->addLayout(verticalLayout, 1);
 
     auto central = new QWidget;

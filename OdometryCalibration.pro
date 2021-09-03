@@ -8,20 +8,27 @@ CONFIG += c++11
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+#LIBS += -L~/Qt_utils/libserialport/.libs/serialport.so
+#INCLUDEPATH += /home/nikolay/Qt_utils/libserialport
+
 SOURCES += \
+    src/serial.cpp \
     src/itemdata.cpp \
     src/main.cpp \
     src/mainwindow.cpp \
     src/modelcalibrationalg.cpp \
+    src/modelrobotcontroller.cpp \
     src/widgetcalculation.cpp \
     src/widgetdraw.cpp \
     src/widgetrobotsettings.cpp \
     src/widgettestsettings.cpp
 
 HEADERS += \
+    include/serial.h \
     include/itemdata.h \
     include/mainwindow.h \
     include/modelcalibrationalg.h \
+    include/modelrobotcontroller.h \
     include/odomdatatype.h \
     include/widgetcalculation.h \
     include/widgetdraw.h \
