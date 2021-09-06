@@ -4,54 +4,50 @@
 
 ModelRobotController::ModelRobotController(QObject *parent) : QObject(parent)
 {
-//    this->fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY | O_NDELAY);
+    this->qsp = new QSerialPort("/dev/ttyACM1");
 
-//    QThread::sleep(1);
+    this->qsp->open(QIODevice::ReadWrite);
 
-//    char* sendStr = "v1 0\n";
-//    int size = strlen(sendStr);
-//    qDebug() << write(fd, sendStr, size);
-//    QThread::sleep(1);
+    this->qsp->setBaudRate(QSerialPort::Baud57600);
+    this->qsp->setDataBits(QSerialPort::Data8);
+    this->qsp->setParity(QSerialPort::NoParity);
+    this->qsp->setStopBits(QSerialPort::OneStop);
+    this->qsp->setFlowControl(QSerialPort::NoFlowControl);
+//    this->qsp->setDataTerminalReady(true);
+//    this->qsp->setRequestToSend(true);
 
-//    for (int i = 0; i < 10; i++) {
-//        char c;
-//        QString str("");
-
-//        do {
-//            read(fd, &c, 1);
-//            str += c;
-//        } while(c != '\n');
-
-//        qDebug() << str;
-//        QThread::sleep(1);
-//    }
-
-//    char* sendNewStr = "n\n";
-//    size = strlen(sendNewStr);
-//    qDebug() << write(fd, sendNewStr, size);
-
-    FILE* file = fopen("/dev/ttyACM0", "r+");
     QThread::sleep(1);
 
-    fprintf(file, "v1 0\n");
-    fflush(file);
+    while (true) {
+        this->qsp->clear();
 
-    for (int i = 0; i < 5; i++) {
-        char c[36];
+        QByteArray msg("o");
+        this->qsp->write(msg);
+        this->qsp->flush();
 
-        fread(c, sizeof(char), 36, file);
+        QThread::msleep(500);
 
-        qDebug() << QString(c);
-        QThread::sleep(1);
+        char c = ' ';
+        QString str("");
+
+        do {
+            if(this->qsp->waitForReadyRead(10000)) {
+                this->qsp->read(&c, 1);
+                str += c;
+            }
+        } while(c != '\n');
+
+        if (str.split(';').count() == 6) {
+            qDebug() << str;
+        }
     }
 
-    QThread::sleep(1);
-    fprintf(file, "n/n");
-    fflush(file);
+    this->qsp->write("v1 0\n");
+    this->qsp->waitForBytesWritten(10000);
 
-    fclose(file);
+    qDebug() << this->qsp->isWritable();
 }
 
 ModelRobotController::~ModelRobotController() {
-    close(fd);
+    this->qsp->close();
 }

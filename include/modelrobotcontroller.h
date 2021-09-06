@@ -2,16 +2,18 @@
 #define MODELROBOTCONTROLLER_H
 
 #include <QObject>
-
-#include <iostream>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <QString>
 #include <QThread>
-#include <iostream>
-#include <stdio.h>
+#include <QtSerialPort/QSerialPort>
+
+//#include <iostream>
+//#include <unistd.h>
+//#include <sys/stat.h>
+//#include <sys/types.h>
+//#include <fcntl.h>
+//#include <QString>
+//#include <QThread>
+//#include <iostream>
+//#include <stdio.h>
 
 class ModelRobotController : public QObject
 {
@@ -21,7 +23,7 @@ public:
     ~ModelRobotController();
 
 private:
-    int fd;
+    QSerialPort *qsp;
 
 signals:
 
