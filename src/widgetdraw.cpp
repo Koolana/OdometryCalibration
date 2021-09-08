@@ -77,7 +77,7 @@ void WidgetDraw::drawRobot(QPainter& qp) {
 //    qDebug() << this->robotPos.x() / this->scaleDiv * this->size().width() / this->numVerticalLine + this->size().width() / 2;
     qp.translate(this->robotPos.x / this->scaleDiv * this->size().width() / this->numVerticalLine + this->size().width() / 2,
                 -this->robotPos.y / this->scaleDiv * this->size().height() / this->numHorizontalLine + this->size().height() / 2);
-    qp.rotate(-robotAng * 180 / M_PI);
+    qp.rotate(-robotPos.th * 180 / M_PI);
 
     qp.drawRect(-this->drawRobotWidth / 2, -this->drawRobotHeight / 2,
                 this->drawRobotWidth, this->drawRobotHeight);
@@ -177,7 +177,7 @@ void WidgetDraw::resizeEvent(QResizeEvent* event) {
     this->update();
 }
 
-void WidgetDraw::changeTest(TestData& data) {
+void WidgetDraw::changeTest(const TestData& data) {
     this->currTest = data;
 
     this->update();
@@ -185,6 +185,12 @@ void WidgetDraw::changeTest(TestData& data) {
 
 void WidgetDraw::changeRotateDir(bool isCW) {
     this->isCW = isCW;
+
+    this->update();
+}
+
+void WidgetDraw::addTrajPoint(const OdomDataType& data) {
+    this->robotPos = data;
 
     this->update();
 }

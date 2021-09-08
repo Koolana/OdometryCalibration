@@ -20,8 +20,8 @@ signals:
 
 public slots:
     void calc(QVector<FullData>& data);
-    void changeTest(TestData&);
-    void changeRobotWidth(RobotParams&);
+    void changeTest(const TestData&);
+    void changeRobotWidth(const RobotParams&);
 };
 
 #endif // MODELCALIBRATIONALG_H

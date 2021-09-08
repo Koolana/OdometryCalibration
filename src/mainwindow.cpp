@@ -35,19 +35,39 @@ MainWindow::MainWindow(QWidget *parent)
     verticalLayout->addWidget(this->wrs, 2);
 
     this->wts = new WidgetTestSettings();
-    connect(this->wts, SIGNAL(sendTestData(TestData&)), this->wd, SLOT(changeTest(TestData&)));
+    connect(this->wts, SIGNAL(sendTestData(const TestData&)), this->wd, SLOT(changeTest(const TestData&)));
     verticalLayout->addWidget(this->wts, 2);
 
     this->wc = new WidgetCalculation();
     verticalLayout->addWidget(this->wc, 7);
 
     this->mca = new ModelCalibrationAlg();
-    connect(this->wrs, SIGNAL(savedParams(RobotParams&)), this->mca, SLOT(changeRobotWidth(RobotParams&)));
-    connect(this->wts, SIGNAL(sendTestData(TestData&)), this->mca, SLOT(changeTest(TestData&)));
-    connect(this->wc, SIGNAL(sendData(QVector<FullData>&)), this->mca, SLOT(calc(QVector<FullData>&)));
+    connect(this->wrs, SIGNAL(savedParams(const RobotParams&)), this->mca, SLOT(changeRobotWidth(const RobotParams&)));
+    connect(this->wts, SIGNAL(sendTestData(const TestData&)), this->mca, SLOT(changeTest(const TestData&)));
+    connect(this->wc, SIGNAL(sendData(QVector<FullData>&)), this->mca , SLOT(calc(QVector<FullData>&)));
     connect(this->mca, SIGNAL(sendResult(CalibrationResults&)), this->wc, SLOT(updateResult(CalibrationResults&)));
 
+    this->threadForController = new QThread;
+
     this->mrc = new ModelRobotController();
+    this->mrc->moveToThread(this->threadForController);
+
+    qRegisterMetaType<OdomDataType>("OdomDataType");
+    connect(this->mrc, SIGNAL(sendOdomPoint(const OdomDataType&)), this->wd, SLOT(addTrajPoint(const OdomDataType&)),  Qt::DirectConnection);
+
+    connect(this->btnStart, SIGNAL(clicked()), this->mrc, SLOT(sendStartCmd()),  Qt::DirectConnection);
+    connect(this->btnStop, SIGNAL(clicked()), this->mrc, SLOT(sendStopCmd()),  Qt::DirectConnection);
+    connect(this->btnNextItr, SIGNAL(clicked()), this->mrc, SLOT(sendResetCmd()),  Qt::DirectConnection);
+    connect(this->wrs, SIGNAL(changedRotateDir(bool)), this->mrc, SLOT(changeRotateDir(bool)),  Qt::DirectConnection);
+
+    qRegisterMetaType<TestData>("TestData");
+    connect(this->wts, SIGNAL(sendTestData(const TestData&)), this->mrc, SLOT(changeTestData(const TestData&)),  Qt::DirectConnection);
+
+    qRegisterMetaType<RobotParams>("RobotParams");
+    connect(this->wrs, SIGNAL(savedParams(const RobotParams&)), this->mrc, SLOT(changeRobotParams(const RobotParams&)),  Qt::DirectConnection);
+
+    this->threadForController->start();
+    QMetaObject::invokeMethod(this->mrc, "init");
 
     globalLayout->addLayout(verticalLayout, 1);
 

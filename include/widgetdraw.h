@@ -28,7 +28,6 @@ private:
     float drawRobotHeight = 0;
 
     OdomDataType robotPos;
-    float robotAng = 0;
 
     TestData currTest;
     bool isCW = true;
@@ -40,9 +39,10 @@ private:
     void drawCurrentRobotInfo(QPainter& qp);
 
 public slots:
-    void changeTest(TestData&);
+    void changeTest(const TestData&);
     void changeRotateDir(bool isCW);
 
+    void addTrajPoint(const OdomDataType&);
 };
 
 #endif // WIDGETDRAW_H

@@ -115,10 +115,10 @@ void ModelCalibrationAlg::calc(QVector<FullData>& data) {
     emit sendResult(res);
 }
 
-void ModelCalibrationAlg::changeTest(TestData& data) {
+void ModelCalibrationAlg::changeTest(const TestData& data) {
     this->currentTest = data.typeTest;
 }
 
-void ModelCalibrationAlg::changeRobotWidth(RobotParams& data) {
+void ModelCalibrationAlg::changeRobotWidth(const RobotParams& data) {
     this->robot_width = data.width;
 }

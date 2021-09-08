@@ -28,7 +28,7 @@ private:
     int currTestType = 0;
 
 signals:
-    void sendTestData(TestData&);
+    void sendTestData(const TestData&);
 
 private slots:
     void changedTest();

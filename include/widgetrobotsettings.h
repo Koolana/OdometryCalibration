@@ -36,7 +36,7 @@ private slots:
 
 signals:
     void changedRotateDir(bool);
-    void savedParams(RobotParams&);
+    void savedParams(const RobotParams&);
 };
 
 #endif // WIDGETROBOTSETTINGS_H

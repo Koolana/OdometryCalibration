@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QMetaType>
 
 #include "widgetdraw.h"
 #include "widgetrobotsettings.h"
@@ -12,6 +13,10 @@
 #include "widgetcalculation.h"
 #include "modelcalibrationalg.h"
 #include "modelrobotcontroller.h"
+
+Q_DECLARE_METATYPE(OdomDataType);
+Q_DECLARE_METATYPE(TestData);
+Q_DECLARE_METATYPE(RobotParams);
 
 class MainWindow : public QMainWindow
 {
@@ -35,5 +40,7 @@ private:
     QPushButton* btnStart;
     QPushButton* btnStop;
     QPushButton* btnNextItr;
+
+    QThread* threadForController;
 };
 #endif // MAINWINDOW_H
