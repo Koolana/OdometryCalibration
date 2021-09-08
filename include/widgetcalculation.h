@@ -9,10 +9,6 @@
 #include <QListWidget>
 #include <QStringBuilder>
 
-#include "qtcsv/stringdata.h"
-#include "qtcsv/reader.h"
-#include "qtcsv/writer.h"
-
 #include "itemdata.h"
 
 class WidgetCalculation : public QGroupBox

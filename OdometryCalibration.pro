@@ -12,7 +12,6 @@ CONFIG += c++11
 #INCLUDEPATH += /home/nikolay/Qt_utils/libserialport
 
 SOURCES += \
-    src/serial.cpp \
     src/itemdata.cpp \
     src/main.cpp \
     src/mainwindow.cpp \
@@ -24,7 +23,6 @@ SOURCES += \
     src/widgettestsettings.cpp
 
 HEADERS += \
-    include/serial.h \
     include/itemdata.h \
     include/mainwindow.h \
     include/modelcalibrationalg.h \

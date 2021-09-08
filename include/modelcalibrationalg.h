@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QtMath>
+
 #include "odomdatatype.h"
 
 class ModelCalibrationAlg : public QObject

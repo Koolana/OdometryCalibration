@@ -10,16 +10,6 @@
 
 #include "odomdatatype.h"
 
-//#include <iostream>
-//#include <unistd.h>
-//#include <sys/stat.h>
-//#include <sys/types.h>
-//#include <fcntl.h>
-//#include <QString>
-//#include <QThread>
-//#include <iostream>
-//#include <stdio.h>
-
 class ModelRobotController : public QObject
 {
     Q_OBJECT
