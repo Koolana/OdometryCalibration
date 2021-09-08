@@ -29,11 +29,19 @@ WidgetTestSettings::WidgetTestSettings()
     connect(radiobutton, SIGNAL(clicked()), this, SLOT(changedTest()));
     this->globalLayout->addWidget(radiobutton, 4, 0);
 
+    auto labelIter = new QLabel("Number iteration:");
+    labelIter->setAlignment(Qt::AlignBottom);
+    this->globalLayout->addWidget(labelIter, 3, 1);
+
     this->leNumIter = new QLineEdit("1");
-//    self.leNumIter.editingFinished.connect(self.maxIterationChanged)
+    connect(this->leNumIter, SIGNAL(editingFinished()), this, SLOT(choosedTest()));
     this->globalLayout->addWidget(this->leNumIter, 4, 1);
 
     this->setLayout(this->globalLayout);
+}
+
+void WidgetTestSettings::init() {
+    this->changedTest();
 }
 
 void WidgetTestSettings::changedTest() {
@@ -64,7 +72,7 @@ void WidgetTestSettings::changedTest() {
 
 void WidgetTestSettings::choosedTest() {
     TestData td;
-    td.numIter = 1;
+    td.numIter = this->leNumIter->text().toInt();
     td.size = this->leSize->text().toFloat();
     td.typeTest = (Tests)this->currTestType;
 

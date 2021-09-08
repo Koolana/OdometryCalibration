@@ -16,27 +16,45 @@ void ModelRobotController::init() {
     this->td = new TestData;
     this->odomPoint = new OdomDataType;
 
-    this->qsp = new QSerialPort("/dev/ttyACM0");
+    this->qsp = new QSerialPort();
     connect(this->qsp, SIGNAL(readyRead()), this, SLOT(receiveFromSerial()));
-
-    this->qsp->open(QIODevice::ReadWrite);
-
-    this->qsp->setBaudRate(QSerialPort::Baud57600);
-    this->qsp->setDataBits(QSerialPort::Data8);
-    this->qsp->setParity(QSerialPort::NoParity);
-    this->qsp->setStopBits(QSerialPort::OneStop);
-    this->qsp->setFlowControl(QSerialPort::NoFlowControl);
-
-    QThread::sleep(1);
 
     this->robotTimer = new QTimer();
     connect(this->robotTimer, SIGNAL(timeout()), this, SLOT(pollRobot()));
-    this->robotTimer->start(100);
+}
 
-    this->qsp->clear();
+void ModelRobotController::openDevice(const QString& devPath) {
+    if (this->qsp->isOpen()) {
+        this->qsp->close();
+    }
+
+    this->qsp->setPortName(devPath);
+
+    if (this->qsp->open(QIODevice::ReadWrite)) {
+        this->qsp->setBaudRate(QSerialPort::Baud57600);
+        this->qsp->setDataBits(QSerialPort::Data8);
+        this->qsp->setParity(QSerialPort::NoParity);
+        this->qsp->setStopBits(QSerialPort::OneStop);
+        this->qsp->setFlowControl(QSerialPort::NoFlowControl);
+
+        emit connected(true);
+
+        QThread::sleep(1);
+        this->qsp->clear();
+        this->state = 0;
+
+        this->robotTimer->start(100);
+    } else {
+        emit connected(false);
+    }
 }
 
 void ModelRobotController::pollRobot() {
+    if (!this->qsp->isOpen()) {
+        this->robotTimer->stop();
+        return;
+    }
+
     if (msgReceived) {
         this->controlRobot();
 
@@ -80,11 +98,13 @@ void ModelRobotController::controlRobot() {
     emit sendOdomPoint(*this->odomPoint);
 
     this->currL += qSqrt(qPow(this->prevX - this->odomPoint->x, 2) + qPow(this->prevY - this->odomPoint->y, 2));
+    this->currTh += qFabs(this->prevTh - this->odomPoint->th);
 
     this->moveInTest();
 
-    this->prevX = odomPoint->x;
-    this->prevY = odomPoint->y;
+    this->prevX = this->odomPoint->x;
+    this->prevY = this->odomPoint->y;
+    this->prevTh = this->odomPoint->th;
 }
 
 void ModelRobotController::moveInTest() {
@@ -102,104 +122,117 @@ void ModelRobotController::moveInTest() {
             this->sendStopCmd();
         }
 
-        if (qFabs(this->odomPoint->vx) < 0.01 and this->finish) {
+        if (qFabs(this->odomPoint->vx) < 0.01 && this->finish) {
+            this->odomPoint->numIter++;
             emit this->sendFinalPoint(*this->odomPoint);
-            this->odomPoint->numIter += 1;
             this->finish = false;
         }
 
         break;
+
     case Tests::SQUARE:
+        switch (this->state) {
+        case 0:
+            break;
+
+        case 1:
+            this->state++;
+            this->sendMoveCmd(this->rp->linearSpeed, 0);
+            break;
+
+        case 2:
+        case 4:
+        case 6:
+        case 8:
+            if (this->currL + this->odomPoint->vx / 10 > this->td->size) {
+                this->state++;
+                this->sendStopCmd();
+                this->currTh = 0;
+                this->sendMoveCmd(0, (this->odomPoint->isClockwise ? -1 : 1) * this->rp->angularSpeed);
+            }
+            break;
+
+        case 3:
+        case 5:
+        case 7:
+        case 9:
+            if (this->currTh + this->odomPoint->vth / 10 > M_PI / 2) {
+                this->state++;
+                this->sendStopCmd();
+                this->currL = 0;
+
+                if (this->state == 10) {
+                    this->odomPoint->numIter++;
+
+                    if (!(this->odomPoint->numIter % this->td->numIter == 0)) {
+                        this->state = 1;
+                    }
+                } else {
+                    this->sendMoveCmd(this->rp->linearSpeed, 0);
+                }
+            }
+            break;
+        case 10:
+            if (qFabs(this->odomPoint->vx) < 0.01) {
+                this->odomPoint->numIter = this->odomPoint->numIter / this->td->numIter;
+
+                emit this->sendFinalPoint(*this->odomPoint);
+
+                this->odomPoint->numIter = this->odomPoint->numIter * this->td->numIter;
+
+                this->state = 0;
+            }
+        }
+
         break;
+
     case Tests::CIRCLE:
-        break;
-    case Tests::ERROR:
-        break;
-    }
-//    if self.testType == 1:
-//        if self.state == 1:
-//            self.state = 2
-//            self.move_callback(self.maxSpeed, 0)
+        switch (this->state) {
+        case 0:
+            break;
+        case 1:
+            this->state++;
+            this->currTh = 0;
+            this->sendMoveCmd(this->rp->linearSpeed, (this->odomPoint->isClockwise ? -1 : 1) * this->rp->linearSpeed / this->td->size);
 
-//        if self.state == 2 and self.currL + vx / 10 > self.a:
-//            self.state = 3
-//            self.stopMoving()
-//            self.move_callback(0, (-1 if self.isClockwise else 1) * self.maxRotate)
+            break;
 
-//        if self.state == 3 and abs(th + vth / 10) > math.pi / 2 + 2 * math.pi * self.numIter:
-//            self.state = 4
-//            self.stopMoving()
-//            self.currL = 0
-//            self.move_callback(self.maxSpeed, 0)
+        case 2:
+            if (this->currTh + this->odomPoint->vth / 10 > 2 * M_PI) {
+                this->odomPoint->numIter++;
 
-//        if self.state == 4 and self.currL + vx / 10 > self.a:
-//            self.state = 5
-//            self.stopMoving()
-//            self.move_callback(0, (-1 if self.isClockwise else 1) * self.maxRotate)
+                if (!(this->odomPoint->numIter % this->td->numIter == 0)) {
+                    this->state = 1;
+                } else {
+                    this->state = 3;
+                    this->sendStopCmd();
+                }
+            }
+            break;
 
-//        if self.state == 5 and abs(th + vth / 10) > math.pi + 2 * math.pi * self.numIter:
-//            self.state = 6
-//            self.stopMoving()
-//            self.currL = 0
-//            self.move_callback(self.maxSpeed, 0)
+        case 3:
+            if (qFabs(this->odomPoint->vx) < 0.01 and qFabs(this->odomPoint->vth) < 0.01) {
+                this->odomPoint->numIter = this->odomPoint->numIter / this->td->numIter;
 
-//        if self.state == 6 and self.currL + vx / 10 > self.a:
-//            self.state = 7
-//            self.stopMoving()
-//            self.move_callback(0, (-1 if self.isClockwise else 1) * self.maxRotate)
+                emit this->sendFinalPoint(*this->odomPoint);
 
-//        if self.state == 7 and abs(th + vth / 10) > 3 * math.pi / 2 + 2 * math.pi * self.numIter:
-//            self.state = 8
-//            self.stopMoving()
-//            self.currL = 0
-//            self.move_callback(self.maxSpeed, 0)
+                this->odomPoint->numIter = this->odomPoint->numIter * this->td->numIter;
 
-//        if self.state == 8 and self.currL + vx / 10 > self.a:
-//            self.state = 9
-//            self.stopMoving()
-//            self.move_callback(0, (-1 if self.isClockwise else 1) * self.maxRotate)
+                this->state = 0;
+            }
+            break;
+        }
 
-//        if self.state == 9 and abs(th + vth / 10) > 2 * math.pi + 2 * math.pi * self.numIter:
-//            self.currL = 0
-//            self.numIter += 1
-//            self.c.changeIter.emit(self.numIter)
-
-//            if  self.numIter == self.maxIter:
-//                self.state = 0
-//                self.finish = True
-//            else:
-//                self.state = 1
-
-//            self.stopMoving()
-
-//        if abs(vx) < 0.01 and self.finish:
-//            self.c.finalPosition.emit([x, y, th])
-//            self.finish = False
-
-//    if self.testType == 2:
-//        if self.state == 1:
-//            self.state = 2
-
-//            if self.isClockwise:
-//                self.move_callback(self.maxSpeed, -self.maxSpeed / self.a)
-//            else:
-//                self.move_callback(self.maxSpeed, self.maxSpeed / self.a)
-
-//        if self.state == 2 and abs(th) > 2 * math.pi * (1 + self.numIter):
-//            self.numIter += 1
-//            self.c.changeIter.emit(self.numIter)
-
-//            if  self.numIter == self.maxIter:
-//                self.finish = True
-//                self.state = 0
-//                self.stopMoving()
-
-//        if abs(vx) < 0.01 and abs(vth) < 0.01 and self.finish:
-//            self.c.finalPosition.emit([x, y, th])
-//            self.finish = False
+        case Tests::ERROR:
+            break;
+        }
 }
 
 void ModelRobotController::sendMoveCmd(float speedLinear, float speedRotate) {
+    if (!this->qsp->isOpen()) {
+        return;
+    }
+
     this->prevSpeedLinear = speedLinear;
     this->prevSpeedRotate = speedRotate;
 
@@ -213,10 +246,14 @@ void ModelRobotController::sendMoveCmd(float speedLinear, float speedRotate) {
 
     this->mutex->unlock();
 
-    qDebug() << "Move msg:" << msg;
+//    qDebug() << "Move msg:" << msg;
 }
 
 void ModelRobotController::sendStopCmd() {
+    if (!this->qsp->isOpen()) {
+        return;
+    }
+
     this->mutex->lock();
 
     this->qsp->write("p");
@@ -225,11 +262,14 @@ void ModelRobotController::sendStopCmd() {
 
     this->mutex->unlock();
 
-    qDebug() << "Move msg:" << "p";
+//    qDebug() << "Move msg:" << "p";
 }
 
 void ModelRobotController::sendStartCmd() {
-    qDebug() << this->state;
+    if (!this->qsp->isOpen()) {
+        return;
+    }
+
     if (this->state == 0) {
         this->state = 1;
     } else {
@@ -238,6 +278,12 @@ void ModelRobotController::sendStartCmd() {
 }
 
 void ModelRobotController::sendResetCmd() {
+    if (!this->qsp->isOpen()) {
+        return;
+    }
+
+    this->sendStopCmd();
+
     this->mutex->lock();
 
     this->qsp->write("n");
@@ -246,11 +292,23 @@ void ModelRobotController::sendResetCmd() {
 
     this->mutex->unlock();
 
-    qDebug() << "Move msg:" << "n";
+    this->state = 0;
+    this->currL = 0;
+    this->currTh = 0;
+
+    this->prevX = 0;
+    this->prevY = 0;
+    this->prevTh = 0;
+
+    this->odomPoint->numIter = 0;
+
+//    qDebug() << "Move msg:" << "n";
 }
 
 void ModelRobotController::changeRotateDir(bool isCW) {
-    this->isCW = isCW;
+    this->odomPoint->isClockwise = isCW;
+
+//    qDebug() << "Rotate changed:" << this->odomPoint->isClockwise;
 }
 
 void ModelRobotController::changeRobotParams(const RobotParams& data) {
@@ -258,7 +316,7 @@ void ModelRobotController::changeRobotParams(const RobotParams& data) {
     rp->linearSpeed = data.linearSpeed;
     rp->width = data.width ;
 
-    qDebug() << "Robot params changed" << rp->linearSpeed << rp->angularSpeed;
+//    qDebug() << "Robot params changed" << rp->linearSpeed << rp->angularSpeed;
 }
 
 void ModelRobotController::changeTestData(const TestData& data) {
@@ -266,13 +324,11 @@ void ModelRobotController::changeTestData(const TestData& data) {
     td->size = data.size;
     td->typeTest = data.typeTest;
 
-    qDebug() << "Test params changed" << td->size << td->typeTest;
+//    qDebug() << "Test params changed" << td->size << td->typeTest;
 }
 
 ModelRobotController::~ModelRobotController() {
-//    QByteArray msg("p");
-//    this->qsp->write(msg);
-//    this->qsp->flush();
-
-    this->qsp->close();
+    if (this->qsp->isOpen()) {
+        this->qsp->close();
+    }
 }

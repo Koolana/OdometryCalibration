@@ -13,10 +13,11 @@ class ItemData : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ItemData(OdomDataType* data, QWidget *parent = nullptr);
+    explicit ItemData(const OdomDataType& data, QWidget *parent = nullptr);
 
     void setExperData(const ExperDataType& data);
     const FullData& getData();
+    void setIterNum(int num);
 
 private:
     QGridLayout* globalLayout;

@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QListWidget>
+#include <QStringBuilder>
 
 #include "qtcsv/stringdata.h"
 #include "qtcsv/reader.h"
@@ -19,9 +20,6 @@ class WidgetCalculation : public QGroupBox
     Q_OBJECT
 public:
     WidgetCalculation();
-
-public slots:
-    void updateResult(CalibrationResults& res);
 
 private:
     QFileDialog* dialog;
@@ -38,12 +36,15 @@ private:
     QLabel* finalKoefsLabel;
 
     void addDataItemToList(ItemData* item);
-    void receiveFinalPoint(OdomDataType& data);
 
 private slots:
     void toCalc();
     void importFile();
     void exportToFile();
+
+public slots:
+    void updateResult(CalibrationResults& res);
+    void receiveFinalPoint(const OdomDataType& data);
 
 signals:
     void sendData(QVector<FullData>&);

@@ -38,14 +38,13 @@ private:
 
     float prevX = 0;
     float prevY = 0;
+    float prevTh = 0;
 
     float prevSpeedLinear;
     float prevSpeedRotate;
 
     float currL = 0;
     float currTh = 0;
-
-    bool isCW;
 
     int state = 0;
     bool finish = false;
@@ -64,6 +63,7 @@ private slots:
 
 public slots:
     void init();
+    void openDevice(const QString& devPath);
 
     void changeRotateDir(bool);
     void changeRobotParams(const RobotParams&);
@@ -74,6 +74,8 @@ public slots:
     void sendStopCmd();
 
 signals:
+    void connected(bool);
+
     void sendOdomPoint(const OdomDataType& data);
     void sendFinalPoint(const OdomDataType& data);
 

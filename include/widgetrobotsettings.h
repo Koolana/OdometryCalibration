@@ -19,9 +19,11 @@ public:
 private:
     QGridLayout* globalLayout;
 
+    QPushButton* btnOpenDevice;
     QPushButton* btnRotate;
     QPushButton* btnSave;
 
+    QLineEdit* lePathToDevice;
     QLineEdit* leWidth;
     QLineEdit* leLinSpeed;
     QLineEdit* leAngSpeed;
@@ -33,10 +35,16 @@ private:
 private slots:
     void saveParams();
     void swapRotateDirection();
+    void openDevice();
+
+public slots:
+    void init();
+    void displayConnectInfo(bool);
 
 signals:
     void changedRotateDir(bool);
     void savedParams(const RobotParams&);
+    void sendDevicePath(const QString&);
 };
 
 #endif // WIDGETROBOTSETTINGS_H

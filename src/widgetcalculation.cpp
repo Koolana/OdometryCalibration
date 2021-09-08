@@ -53,11 +53,14 @@ void WidgetCalculation::importFile() {
                                               QFileDialog::DontUseNativeDialog);
 
     QFile file(filePath);
+
     if (!file.exists() or !file.open(QIODevice::ReadOnly)) {
         return;
     }
 
     QStringList lineList = QString(file.readAll()).split('\n');
+
+    int shiftNum = this->wDataList->count();
 
     for (int i = 0; i < lineList.count(); i++) {
         QStringList values = lineList.at(i).split(',');
@@ -70,13 +73,13 @@ void WidgetCalculation::importFile() {
         testDataOdom->x = values.at(1).toFloat();
         testDataOdom->y = values.at(2).toFloat();
         testDataOdom->isClockwise = (values.at(0) == "True" ? true : false);
-        testDataOdom->numIter = i + 1;
+        testDataOdom->numIter = i + 1 + shiftNum;
 
         auto testDataExper = new ExperDataType();
         testDataExper->x = values.at(3).toFloat();
         testDataExper->y = values.at(4).toFloat();
 
-        auto itemData = new ItemData(testDataOdom);
+        auto itemData = new ItemData(*testDataOdom);
         itemData->setExperData(*testDataExper);
 
         this->addDataItemToList(itemData);
@@ -86,7 +89,34 @@ void WidgetCalculation::importFile() {
 }
 
 void WidgetCalculation::exportToFile() {
-    qDebug() << "Export";
+    QVector<FullData> dataList;
+
+    for(int i = 0; i < this->wDataList->count(); i++)
+    {
+        QListWidgetItem* item = this->wDataList->item(i);
+        dataList.append(((ItemData*)this->wDataList->itemWidget(item))->getData());
+    }
+
+    QString dirPath = this->dialog->getExistingDirectory(this, "Select a folder:",
+                                                   QDir::homePath(), QFileDialog::DontUseNativeDialog | QFileDialog::ShowDirsOnly);
+
+    QFile file(dirPath + "/exported.csv");
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        return;
+    }
+
+    for (int i = 0; i < dataList.count(); i++) {
+        const FullData* currData = &dataList.at(i);
+
+        file.write((QString(currData->odom.isClockwise ? "True" : "False") % "," %
+                    QString::number(currData->odom.x) % "," %
+                    QString::number(currData->odom.y) % "," %
+                    QString::number(currData->exper.x) % "," %
+                    QString::number(currData->exper.y) % "\n").toUtf8());
+    }
+
+    file.close();
 }
 
 void WidgetCalculation::addDataItemToList(ItemData* item) {
@@ -99,8 +129,9 @@ void WidgetCalculation::addDataItemToList(ItemData* item) {
 //    qDebug() << QString("New odom point added");
 }
 
-void WidgetCalculation::receiveFinalPoint(OdomDataType& data) {
-    auto itemData = new ItemData(&data);
+void WidgetCalculation::receiveFinalPoint(const OdomDataType& data) {
+    auto itemData = new ItemData(data, this);
+    itemData->setIterNum(this->wDataList->count() + 1);
     this->addDataItemToList(itemData);
 
     this->update();

@@ -27,12 +27,15 @@ private:
 
     int currTestType = 0;
 
-signals:
-    void sendTestData(const TestData&);
-
 private slots:
     void changedTest();
     void choosedTest();
+
+public slots:
+    void init();
+
+signals:
+    void sendTestData(const TestData&);
 };
 
 #endif // WIDGETTESTSETTINGS_H

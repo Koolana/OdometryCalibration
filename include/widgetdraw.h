@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QPainter>
 #include <QtMath>
+#include <QTimer>
 
 #include "odomdatatype.h"
 
@@ -28,9 +29,13 @@ private:
     float drawRobotHeight = 0;
 
     OdomDataType robotPos;
+    QVector<OdomDataType> trajPoints;
+    QList<QColor> trajColors;
 
     TestData currTest;
     bool isCW = true;
+
+    bool clearFlag = false;
 
     void drawScale(QPainter& qp);
     void drawRobot(QPainter& qp);
@@ -43,6 +48,8 @@ public slots:
     void changeRotateDir(bool isCW);
 
     void addTrajPoint(const OdomDataType&);
+
+    void clear();
 };
 
 #endif // WIDGETDRAW_H

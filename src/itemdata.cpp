@@ -1,17 +1,17 @@
 #include "../include/itemdata.h"
 
-ItemData::ItemData(OdomDataType* data, QWidget *parent) : QWidget(parent)
+ItemData::ItemData(const OdomDataType& data, QWidget *parent) : QWidget(parent)
 {
-    this->data = *data;
+    this->data = data;
 
     this->globalLayout = new QGridLayout();
     this->globalLayout->setSpacing(0);
     this->globalLayout->setContentsMargins(5, 5, 0, 5);
 
-    this->labelNumber = new QLabel(QString::number(data->numIter));
+    this->labelNumber = new QLabel(QString::number(this->data.numIter));
     this->globalLayout->addWidget(this->labelNumber, 0, 0, 3, 0);
 
-    this->labelRotateDir = new QLabel(data->isClockwise ? "CW" : "CCW");
+    this->labelRotateDir = new QLabel(this->data.isClockwise ? "CW" : "CCW");
     this->labelRotateDir->setFont(QFont("Helvetica [Cronyx]", 5));
     this->labelRotateDir->setAlignment(Qt::AlignBottom);
     this->globalLayout->addWidget(this->labelRotateDir, 2, 0, 1, 0);
@@ -24,11 +24,11 @@ ItemData::ItemData(OdomDataType* data, QWidget *parent) : QWidget(parent)
     titleY->setAlignment(Qt::AlignCenter);
     this->globalLayout->addWidget(titleY, 2, 1, 1, 1);
 
-    this->lOdomDataX = new QLabel(QString::number(data->x));
+    this->lOdomDataX = new QLabel(QString::number(this->data.x));
     this->lOdomDataX->setAlignment(Qt::AlignCenter);
     this->globalLayout->addWidget(this->lOdomDataX, 0, 2, 1, 4);
 
-    this->lOdomDataY = new QLabel(QString::number(data->y));
+    this->lOdomDataY = new QLabel(QString::number(this->data.y));
     this->lOdomDataY->setAlignment(Qt::AlignCenter);
     this->globalLayout->addWidget(this->lOdomDataY, 2, 2, 1, 4);
 
@@ -58,6 +58,10 @@ const FullData& ItemData::getData() {
     data->exper.y = this->leExperDataY->text().toFloat();
 
     return *data;
+}
+
+void ItemData::setIterNum(int num) {
+    this->labelNumber->setText(QString::number(num));
 }
 
 void ItemData::paintEvent(QPaintEvent *event) {

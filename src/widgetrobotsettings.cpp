@@ -8,6 +8,13 @@ WidgetRobotSettings::WidgetRobotSettings()
 
     this->globalLayout = new QGridLayout();
 
+    this->lePathToDevice = new QLineEdit("ttyACM0");
+    globalLayout->addWidget(this->lePathToDevice, 0, 0, 1, 3);
+
+    this->btnOpenDevice = new QPushButton("Open");
+    connect(this->btnOpenDevice, SIGNAL(clicked()), this, SLOT(openDevice()));
+    globalLayout->addWidget(this->btnOpenDevice, 0, 3, 1, 1);
+
     this->btnRotate = new QPushButton();
     this->btnRotate->setIcon(this->cwCircleArrow);
     this->btnRotate->setFixedSize(90, 90);
@@ -38,6 +45,24 @@ WidgetRobotSettings::WidgetRobotSettings()
     globalLayout->addWidget(this->btnSave, 11, 0, 1, 4);
 
     this->setLayout(this->globalLayout);
+}
+
+void WidgetRobotSettings::init() {
+    this->saveParams();
+    emit changedRotateDir(this->isCW);
+    this->openDevice();
+}
+
+void WidgetRobotSettings::displayConnectInfo(bool isConnected) {
+    QPalette pal = this->btnOpenDevice->palette();
+    pal.setColor(QPalette::Button, isConnected ? QColor(Qt::green) : QColor(Qt::red));
+    this->btnOpenDevice->setAutoFillBackground(true);
+    this->btnOpenDevice->setPalette(pal);
+    this->btnOpenDevice->update();
+}
+
+void WidgetRobotSettings::openDevice() {
+    emit sendDevicePath(this->lePathToDevice->text());
 }
 
 void WidgetRobotSettings::saveParams() {
