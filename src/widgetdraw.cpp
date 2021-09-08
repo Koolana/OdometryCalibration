@@ -15,6 +15,8 @@ WidgetDraw::WidgetDraw(QWidget *parent) : QWidget(parent)
 }
 
 void WidgetDraw::paintEvent(QPaintEvent *event) {
+    Q_UNUSED(event);
+
     QPainter qp(this);
     this->drawScale(qp);
     this->drawRobot(qp);
@@ -183,6 +185,8 @@ void WidgetDraw::drawCurrentRobotInfo(QPainter& qp) {
 }
 
 void WidgetDraw::resizeEvent(QResizeEvent* event) {
+    Q_UNUSED(event);
+
     if (this->size().width() > this->size().height()) {
         this->numHorizontalLine = 10;
 

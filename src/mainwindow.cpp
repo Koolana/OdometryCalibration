@@ -4,7 +4,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     this->resize(1450, 1080);
-    this->globalLayout = new QHBoxLayout(this);
+    this->globalLayout = new QHBoxLayout();
 
     QVBoxLayout* drawLayout = new QVBoxLayout();
 

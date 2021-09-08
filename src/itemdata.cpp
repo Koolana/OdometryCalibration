@@ -65,6 +65,8 @@ void ItemData::setIterNum(int num) {
 }
 
 void ItemData::paintEvent(QPaintEvent *event) {
+    Q_UNUSED(event);
+
     QPainter qp(this);
     qp.drawLine(this->width() / 9 - 1, 0, this->width() / 9 - 1, this->height());
     qp.drawLine(this->width() / 9 + 1, 0, this->width() / 9 + 1, this->height());
@@ -82,6 +84,8 @@ void ItemData::paintEvent(QPaintEvent *event) {
 }
 
 void ItemData::resizeEvent(QResizeEvent* event) {
+    Q_UNUSED(event);
+
     this->leExperDataX->setFixedWidth(3 * this->width() / 9);
     this->leExperDataY->setFixedWidth(3 * this->width() / 9);
 
