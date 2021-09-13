@@ -38,6 +38,8 @@ private:
 
     int state = 0;
     bool finish = false;
+    int cmdTimeout = 500;
+    bool clearFlag = false;
 
     RobotParams* rp;
     TestData* td;
@@ -46,6 +48,7 @@ private:
     void controlRobot();
     void moveInTest();
     void sendMoveCmd(float speedLinear, float speedRotate);
+    void resetParams();
 
 private slots:
     void receiveFromSerial();

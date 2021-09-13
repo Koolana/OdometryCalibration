@@ -25,6 +25,7 @@ void ModelRobotController::init() {
 
 void ModelRobotController::openDevice(const QString& devPath) {
     if (this->qsp->isOpen()) {
+        this->robotTimer->stop();
         this->qsp->close();
     }
 
@@ -40,8 +41,12 @@ void ModelRobotController::openDevice(const QString& devPath) {
         emit connected(true);
 
         QThread::sleep(1);
+
         this->qsp->clear();
-        this->state = 0;
+
+        this->msgReceived = true;
+        this->clearFlag = false;
+        this->resetParams();
 
         this->robotTimer->start(100);
     } else {
@@ -55,8 +60,12 @@ void ModelRobotController::pollRobot() {
         return;
     }
 
-    if (msgReceived) {
-        this->controlRobot();
+    if (this->msgReceived) {
+        if (!this->clearFlag) {
+            this->controlRobot();
+        } else {
+            this->clearFlag = false;
+        }
 
         this->inputMsg->clear();
         this->qsp->clear();
@@ -68,7 +77,7 @@ void ModelRobotController::pollRobot() {
 
         this->mutex->unlock();
 
-        msgReceived = false;
+        this->msgReceived = false;
     }
 }
 
@@ -76,7 +85,7 @@ void ModelRobotController::receiveFromSerial() {
     this->inputMsg->append(this->qsp->readAll());
 
     if (this->inputMsg->at(this->inputMsg->count() - 1) == '\n') {
-        msgReceived = true;
+        this->msgReceived = true;
     }
 }
 
@@ -108,6 +117,8 @@ void ModelRobotController::controlRobot() {
 }
 
 void ModelRobotController::moveInTest() {
+//    qDebug() << this->state << this->currL << this->currTh;
+
     switch (td->typeTest) {
     case Tests::LINE:
         if (this->state == 1) {
@@ -242,7 +253,7 @@ void ModelRobotController::sendMoveCmd(float speedLinear, float speedRotate) {
 
     this->qsp->write(msg.toUtf8());
     this->qsp->flush();
-    QThread::msleep(200);
+    QThread::msleep(this->cmdTimeout);
 
     this->mutex->unlock();
 
@@ -258,7 +269,7 @@ void ModelRobotController::sendStopCmd() {
 
     this->qsp->write("p");
     this->qsp->flush();
-    QThread::msleep(200);
+    QThread::msleep(this->cmdTimeout);
 
     this->mutex->unlock();
 
@@ -288,10 +299,17 @@ void ModelRobotController::sendResetCmd() {
 
     this->qsp->write("n");
     this->qsp->flush();
-    QThread::msleep(200);
+    this->clearFlag = true;
+    QThread::msleep(this->cmdTimeout);
 
     this->mutex->unlock();
 
+    this->resetParams();
+
+//    qDebug() << "Move msg:" << "n";
+}
+
+void ModelRobotController::resetParams() {
     this->state = 0;
     this->currL = 0;
     this->currTh = 0;
@@ -301,8 +319,6 @@ void ModelRobotController::sendResetCmd() {
     this->prevTh = 0;
 
     this->odomPoint->numIter = 0;
-
-//    qDebug() << "Move msg:" << "n";
 }
 
 void ModelRobotController::changeRotateDir(bool isCW) {
