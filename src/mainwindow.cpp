@@ -76,8 +76,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     globalLayout->addLayout(verticalLayout, 1);
 
-    auto central = new QWidget;
-    central->setLayout(globalLayout);
+    auto odomWidget = new QWidget();
+    odomWidget->setLayout(globalLayout);
+
+    auto pidWidget = new QWidget();
+//    pidWidget->setLayout(globalLayout);
+
+    auto central = new QTabWidget();
+    central->addTab(odomWidget, "Odometry");
+    central->addTab(pidWidget, "PID-tune");
 
     setCentralWidget(central);
 

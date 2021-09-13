@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QTabWidget>
 #include <QPushButton>
 #include <QMetaType>
 
