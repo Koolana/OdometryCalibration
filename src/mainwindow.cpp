@@ -4,6 +4,9 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     this->resize(1450, 1080);
+
+    auto odomWidget = new QWidget();
+
     this->globalLayout = new QHBoxLayout();
 
     QVBoxLayout* drawLayout = new QVBoxLayout();
@@ -76,11 +79,37 @@ MainWindow::MainWindow(QWidget *parent)
 
     globalLayout->addLayout(verticalLayout, 1);
 
-    auto odomWidget = new QWidget();
     odomWidget->setLayout(globalLayout);
 
+
+
     auto pidWidget = new QWidget();
-//    pidWidget->setLayout(globalLayout);
+
+    this->globalLayoutPID = new QHBoxLayout();
+
+    QVBoxLayout* drawLayoutPID = new QVBoxLayout();
+
+    this->wdPID = new WidgetDrawPID();
+    drawLayoutPID->addWidget(wdPID);
+
+    QHBoxLayout* ctrlButtonsLayoutPID = new QHBoxLayout();
+
+    this->btnStartPID = new QPushButton("Start");
+    ctrlButtonsLayoutPID->addWidget(this->btnStartPID);
+
+    this->btnNextItrPID = new QPushButton("Next iteration");
+    ctrlButtonsLayoutPID->addWidget(this->btnNextItrPID);
+
+    drawLayoutPID->addLayout(ctrlButtonsLayoutPID);
+
+    this->globalLayoutPID->addLayout(drawLayoutPID, 5);
+
+    this->wsPID = new WidgetPIDSettings();
+    this->globalLayoutPID->addWidget(this->wsPID, 1);
+
+    pidWidget->setLayout(this->globalLayoutPID);
+
+
 
     auto central = new QTabWidget();
     central->addTab(odomWidget, "Odometry");

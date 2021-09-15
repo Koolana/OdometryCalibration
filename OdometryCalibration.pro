@@ -20,7 +20,9 @@ SOURCES += \
     src/widgetcalculation.cpp \
     src/widgetdraw.cpp \
     src/widgetrobotsettings.cpp \
-    src/widgettestsettings.cpp
+    src/widgettestsettings.cpp \
+    src/widgetdrawpid.cpp \
+    src/widgetpidsettings.cpp
 
 HEADERS += \
     include/itemdata.h \
@@ -31,7 +33,9 @@ HEADERS += \
     include/widgetcalculation.h \
     include/widgetdraw.h \
     include/widgetrobotsettings.h \
-    include/widgettestsettings.h
+    include/widgettestsettings.h \
+    include/widgetdrawpid.h \
+    include/widgetpidsettings.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

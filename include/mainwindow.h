@@ -15,6 +15,9 @@
 #include "modelcalibrationalg.h"
 #include "modelrobotcontroller.h"
 
+#include "widgetdrawpid.h"
+#include "widgetpidsettings.h"
+
 Q_DECLARE_METATYPE(OdomDataType);
 Q_DECLARE_METATYPE(TestData);
 Q_DECLARE_METATYPE(RobotParams);
@@ -41,6 +44,15 @@ private:
     QPushButton* btnStart;
     QPushButton* btnStop;
     QPushButton* btnNextItr;
+
+
+    QHBoxLayout* globalLayoutPID;
+    WidgetDrawPID* wdPID;
+
+    QPushButton* btnStartPID;
+    QPushButton* btnNextItrPID;
+    WidgetPIDSettings* wsPID;
+
 
     QThread* threadForController;
 };
