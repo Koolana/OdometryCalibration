@@ -309,6 +309,20 @@ void ModelRobotController::sendResetCmd() {
 //    qDebug() << "Move msg:" << "n";
 }
 
+void ModelRobotController::sendPID(const PID& data) {
+    QString msg = "k" + QString::number(data.p, 'f', 5) + " " +
+                        QString::number(data.i, 'f', 5) + " " +
+                        QString::number(data.d, 'f', 5) + "\n";
+
+    this->mutex->lock();
+
+    this->qsp->write(msg.toUtf8());
+    this->qsp->flush();
+    QThread::msleep(this->cmdTimeout);
+
+    this->mutex->unlock();
+}
+
 void ModelRobotController::resetParams() {
     this->state = 0;
     this->currL = 0;

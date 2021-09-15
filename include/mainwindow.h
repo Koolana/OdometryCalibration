@@ -21,6 +21,7 @@
 Q_DECLARE_METATYPE(OdomDataType);
 Q_DECLARE_METATYPE(TestData);
 Q_DECLARE_METATYPE(RobotParams);
+Q_DECLARE_METATYPE(PID);
 
 class MainWindow : public QMainWindow
 {
@@ -33,10 +34,15 @@ public:
 private:
     QHBoxLayout* globalLayout;
 
+    QTabBar* bar;
+
     WidgetDraw* wd;
+    WidgetDrawPID* wdPID;
+
     WidgetRobotSettings* wrs;
     WidgetTestSettings* wts;
     WidgetCalculation* wc;
+    WidgetPIDSettings* wsPID;
 
     ModelCalibrationAlg* mca;
     ModelRobotController* mrc;
@@ -45,15 +51,9 @@ private:
     QPushButton* btnStop;
     QPushButton* btnNextItr;
 
-
-    QHBoxLayout* globalLayoutPID;
-    WidgetDrawPID* wdPID;
-
-    QPushButton* btnStartPID;
-    QPushButton* btnNextItrPID;
-    WidgetPIDSettings* wsPID;
-
-
     QThread* threadForController;
+
+private slots:
+    void changedTab(int index);
 };
 #endif // MAINWINDOW_H

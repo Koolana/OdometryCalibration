@@ -65,6 +65,7 @@ public slots:
     void sendStartCmd();
     void sendResetCmd();
     void sendStopCmd();
+    void sendPID(const PID& data);
 
 signals:
     void connected(bool);

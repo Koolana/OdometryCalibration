@@ -18,11 +18,25 @@ private:
     void paintEvent(QPaintEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
 
+    QVector<QPointF> trajPoints;
+
     int numVerticalLine = 10;
     int numHorizontalLine = 10;
-    float scaleDiv = 0.5;
+
+    float scaleDivY = 0.1;
+    float scaleDivX;
+
+    int msecs = 10000;
+    int period = 100;
+
+    bool clearFlag = false;
 
     void drawScale(QPainter& qp);
+    void drawTrajectory(QPainter& qp);
+
+public slots:
+    void addTrajPoint(const OdomDataType& data);
+    void clear();
 
 };
 

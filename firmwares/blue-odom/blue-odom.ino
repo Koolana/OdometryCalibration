@@ -23,6 +23,8 @@
 
 //#include <TroykaIMU.h>
 #include <Wire.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 // MegaADK DIGITAL PINS USABLE FOR INTERRUPTS 2, 3, 18, 19, 20, 21
 //                                                 I2C pins 20, 21
@@ -69,7 +71,7 @@ bool settingSpeed = false; // команда установки скорости
 
 //------------------------------------------------
 #include <string.h>
-char buffer[8];
+char buffer[256];
 double LinearVelocity, AngularVelocity;
 double readV, readW;
 double wheelLeftS = 0;
@@ -299,6 +301,26 @@ void get_messages_from_Serial()
 //          printValue(AngularVelocity, "AngularVelocity");
 
           settingSpeed = true;
+
+          break;
+        }
+
+        case 'k':
+        {
+
+          String line = Serial.readStringUntil('\n');
+          line.toCharArray(buffer, line.length() + 1);
+          
+          double p = atof(strtok(buffer, " "));
+
+          char* next = strchr(buffer, ' ');
+          double i = atof(strtok(next, " "));
+
+          next = strchr(next, ' ');
+          double d = atof(strtok(next, " "));
+
+          myPID1.SetTunings(p, i, d);
+          myPID2.SetTunings(p, i, d);
 
           break;
         }

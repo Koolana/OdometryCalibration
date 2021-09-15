@@ -53,4 +53,10 @@ struct TestData {
     Tests typeTest = Tests::ERROR;
 };
 
+struct PID {
+    float p;
+    float i;
+    float d;
+};
+
 #endif // ODOMDATATYPE_H
