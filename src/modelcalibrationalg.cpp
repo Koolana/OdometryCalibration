@@ -9,18 +9,18 @@ ModelCalibrationAlg::ModelCalibrationAlg(QObject *parent) : QObject(parent)
 
 void ModelCalibrationAlg::calc(QVector<FullData>& data) {
     CalibrationResults res;
-    res.typeTest = this->currentTest;
+    res.typeTest = this->currentTest.typeTest;
 
-    switch (this->currentTest) {
+    switch (this->currentTest.typeTest) {
     case Tests::LINE: {
-        float sumDeltaX = 0;
-        float sumDeltaY = 0;
+        qreal sumDeltaX = 0;
+        qreal sumDeltaY = 0;
 
         for (int i = 0; i < data.count(); i++) {
             FullData currData = data.at(i);
 
-            sumDeltaX += currData.odom.x - currData.exper.x;
-            sumDeltaY += currData.odom.y - currData.exper.y;
+            sumDeltaX += currData.exper.x - currData.odom.x;
+            sumDeltaY += currData.exper.y - currData.odom.y;
         }
 
         if (sumDeltaX == 0) {
@@ -56,11 +56,11 @@ void ModelCalibrationAlg::calc(QVector<FullData>& data) {
             return;
         }
 
-        float sumDeltaX_cw = 0;
-        float sumDeltaY_cw = 0;
+        qreal sumDeltaX_cw = 0;
+        qreal sumDeltaY_cw = 0;
 
-        float sumDeltaX_ccw = 0;
-        float sumDeltaY_ccw = 0;
+        qreal sumDeltaX_ccw = 0;
+        qreal sumDeltaY_ccw = 0;
 
         int cwCount = 0;
         int ccwCount = 0;
@@ -68,13 +68,15 @@ void ModelCalibrationAlg::calc(QVector<FullData>& data) {
         for (int i = 0; i < data.count(); i++) {
             FullData currData = data.at(i);
 
+//            qDebug() << currData.odom.isClockwise << currData.exper.x << currData.odom.x;
+
             if (currData.odom.isClockwise) {
-                sumDeltaX_cw += currData.odom.x - currData.exper.x;
-                sumDeltaY_cw += currData.odom.y - currData.exper.y;
+                sumDeltaX_cw += currData.exper.x - currData.odom.x;
+                sumDeltaY_cw += currData.exper.y - currData.odom.y;
                 cwCount++;
             } else {
-                sumDeltaX_ccw += currData.odom.x - currData.exper.x;
-                sumDeltaY_ccw += currData.odom.y - currData.exper.y;
+                sumDeltaX_ccw += currData.exper.x - currData.odom.x;
+                sumDeltaY_ccw += currData.exper.y - currData.odom.y;
                 ccwCount++;
             }
         }
@@ -85,17 +87,13 @@ void ModelCalibrationAlg::calc(QVector<FullData>& data) {
         sumDeltaX_ccw /= ccwCount;
         sumDeltaY_ccw /= ccwCount;
 
-        qreal betta = (sumDeltaX_cw - sumDeltaX_ccw) / ((-4) * this->robot_width);
+        qreal betta = (sumDeltaX_cw - sumDeltaX_ccw) / ((-4) * this->currentTest.size);
 
-        qreal R = 0;
-
-        if (!(betta == 0)) {
-            R = (this->robot_width / 2) / qSin(betta / 2);
-        }
+        qreal R = (betta == 0 ? 0 : (this->currentTest.size / 2) / qSin(betta / 2));
 
         qreal Ed = (R + this->robot_width / 2) / (R - this->robot_width / 2);
 
-        qreal alpha = (sumDeltaX_cw + sumDeltaX_ccw) / ((-4) * this->robot_width);
+        qreal alpha = (sumDeltaX_cw + sumDeltaX_ccw) / ((-4) * this->currentTest.size);
 
         qreal Eb = (M_PI / 2) / ((M_PI / 2) - alpha);
 
@@ -116,7 +114,7 @@ void ModelCalibrationAlg::calc(QVector<FullData>& data) {
 }
 
 void ModelCalibrationAlg::changeTest(const TestData& data) {
-    this->currentTest = data.typeTest;
+    this->currentTest = data;
 }
 
 void ModelCalibrationAlg::changeRobotWidth(const RobotParams& data) {

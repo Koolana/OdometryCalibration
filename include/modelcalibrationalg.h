@@ -13,8 +13,8 @@ public:
     explicit ModelCalibrationAlg(QObject *parent = nullptr);
 
 private:
-    Tests currentTest = Tests::ERROR;
-    float robot_width = 0;
+    TestData currentTest;
+    qreal robot_width = 0;
 
 signals:
     void sendResult(CalibrationResults&);
