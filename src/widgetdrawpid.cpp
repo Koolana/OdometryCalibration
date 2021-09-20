@@ -117,7 +117,7 @@ void WidgetDrawPID::addTrajPoint(const OdomDataType& data) {
 
     if (this->trajPoints.count() > 0) {
         for (int i = 0; i < this->trajPoints.count(); i++) {
-            if (this->trajPoints[i].x() < - (msecs + 2 * this->scaleDivX)) {
+            if (this->trajPoints[i].x() < - ((3*this->numVerticalLine) * this->scaleDivX)) {
                 this->trajPoints.remove(i);
             } else {
                 this->trajPoints[i].setX(this->trajPoints[i].x() - this->period);
