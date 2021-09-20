@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QtMath>
 #include <QMutex>
+#include <QTime>
 
 #include "odomdatatype.h"
 

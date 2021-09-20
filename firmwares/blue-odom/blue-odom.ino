@@ -26,6 +26,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+//#include "PIDtuner.h"
+//PIDtuner tuner;
+
+//#include "PIDtuner2.h"
+//PIDtuner2 tuner;
+
 // MegaADK DIGITAL PINS USABLE FOR INTERRUPTS 2, 3, 18, 19, 20, 21
 //                                                 I2C pins 20, 21
 
@@ -153,6 +159,9 @@ void PIDInit() {
   myPID2.SetMode(AUTOMATIC);
   myPID1.SetOutputLimits(0,255);
   myPID2.SetOutputLimits(0,255);
+
+//  tuner.setParameters(NORMAL, 130, 40, 2000, 3, 2000, 30);
+//  tuner.setParameters(NORMAL, 150, 200, 1000, 1, 50);
 }
 void MotorsInit() { //Initialize motors variables
   DirectionR = LOW;
@@ -223,16 +232,6 @@ void Timer_finish()  {
   // проверка
   Vr = (((2*V)+(omega*L))/(2*R))*R; //M/S
   Vl = (((2*V)-(omega*L))/(2*R))*R;
-
-//  printValue(V);  // linear velocity
-//  printValue(omega);  // angular velocity
-//
-//  printValue(yaw);  // yaw angle
-//  printValue(x);  // x position
-//  printValue(y);  // y position
-//
-//  Serial.print("\n");
-//  Serial.flush();
 }
 void Movement(int a,int b) {//move
   if (a < 13) {a = 0;}
@@ -247,17 +246,26 @@ void Movement(int a,int b) {//move
 void PIDMovement(double a,double b) {
     // a, b - m/sec
 
-    if (a < 0) {a = abs(a); DirectionR = true;}
-    else {DirectionR = false;}
+  if (a < 0) {a = abs(a); DirectionR = true;}
+  else {DirectionR = false;}
 
-    if (b < 0) {b = abs(b); DirectionL = true;}
-    else {DirectionL = false;}
+  if (b < 0) {b = abs(b); DirectionL = true;}
+  else {DirectionL = false;}
 
   Setpoint1= (a * 255 /maxSpeed); // уставка скорости
   Setpoint2= (b * 255 /maxSpeed);
 
   Input1= wheelRightV * 255 / maxSpeed;           // обратная связь ПИД-регулятора, м/сек
   Input2= wheelLeftV * 255 / maxSpeed;
+
+//  tuner.setInput(Input1); // передаём текущее значение с датчика. ЖЕЛАТЕЛЬНО ФИЛЬТРОВАННОЕ
+//  tuner.compute(); // тут производятся вычисления по своему таймеру
+//  analogWrite(MotorRpwm, tuner.getOutput());
+//  digitalWrite(MotorRdir,DirectionR);
+//  analogWrite (MotorLpwm,tuner.getOutput());      //motor2 move forward at speed b
+//  digitalWrite(MotorLdir,DirectionL);
+//
+//  tuner.debugText();
 
   myPID1.Compute();
   myPID2.Compute();
