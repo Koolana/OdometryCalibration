@@ -25,12 +25,6 @@ MainWindow::MainWindow(QWidget *parent)
     drawLayout->addWidget(this->wd);
     drawLayout->addWidget(this->wdPID);
 
-//    this->tabWidgetDraw = new QTabWidget();
-//    this->tabWidgetDraw->addTab(this->wd, "Odometry");
-//    this->tabWidgetDraw->addTab(this->wdPID, "PID-tune");
-//    drawLayout->addWidget(this->tabWidgetDraw);
-//    drawLayout->addWidget(wd);
-
     QHBoxLayout* ctrlButtonsLayout = new QHBoxLayout();
 
     this->btnStart = new QPushButton("Start");
@@ -43,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     this->btnNextItr = new QPushButton("Next iteration");
     connect(this->btnNextItr, SIGNAL(clicked()), this->wd, SLOT(clear()));
+    connect(this->btnNextItr, SIGNAL(clicked()), this->wdPID, SLOT(clear()));
     ctrlButtonsLayout->addWidget(this->btnNextItr);
 
     drawLayout->addLayout(ctrlButtonsLayout);
@@ -103,43 +98,6 @@ MainWindow::MainWindow(QWidget *parent)
     QMetaObject::invokeMethod(this->mrc, "init");
 
     globalLayout->addLayout(verticalLayout, 1);
-
-//    odomWidget->setLayout(globalLayout);
-
-
-
-//    auto pidWidget = new QWidget();
-
-//    this->globalLayoutPID = new QHBoxLayout();
-
-//    QVBoxLayout* drawLayoutPID = new QVBoxLayout();
-
-//    this->wdPID = new WidgetDrawPID();
-//    connect(this->mrc, SIGNAL(sendOdomPoint(OdomDataType)), this->wdPID, SLOT(addTrajPoint(OdomDataType)),  Qt::QueuedConnection);
-//    drawLayoutPID->addWidget(wdPID);
-
-//    QHBoxLayout* ctrlButtonsLayoutPID = new QHBoxLayout();
-
-//    this->btnStartPID = new QPushButton("Start");
-//    connect(this->btnStartPID, SIGNAL(clicked()), this->mrc, SLOT(sendStartCmd()),  Qt::QueuedConnection);
-//    ctrlButtonsLayoutPID->addWidget(this->btnStartPID);
-
-//    this->btnStopPID = new QPushButton("Stop");
-//    connect(this->btnStopPID, SIGNAL(clicked()), this->mrc, SLOT(sendStopCmd()),  Qt::QueuedConnection);
-//    ctrlButtonsLayoutPID->addWidget(this->btnStopPID);
-
-//    drawLayoutPID->addLayout(ctrlButtonsLayoutPID);
-
-//    this->globalLayoutPID->addLayout(drawLayoutPID, 5);
-
-
-//    pidWidget->setLayout(this->globalLayoutPID);
-
-
-
-//    auto central = new QTabWidget();
-//    central->addTab(odomWidget, "Odometry");
-//    central->addTab(pidWidget, "PID-tune");
 
     auto central = new QWidget();
     central->setLayout(globalLayout);

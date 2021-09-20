@@ -5,6 +5,12 @@
 #include <QPainter>
 #include <QtMath>
 #include <QTimer>
+#include <QGraphicsWidget>
+#include <QChart>
+#include <QChartView>
+#include <QSplineSeries>
+#include <QValueAxis>
+#include <QGridLayout>
 
 #include "odomdatatype.h"
 
@@ -15,24 +21,19 @@ public:
     explicit WidgetDrawPID(QWidget *parent = nullptr);
 
 private:
-    void paintEvent(QPaintEvent* event) override;
-    void resizeEvent(QResizeEvent* event) override;
-
     QVector<QPointF> trajPoints;
 
-    int numVerticalLine = 10;
-    int numHorizontalLine = 10;
+    int numVerticalLine = 11;
+    int numHorizontalLine = 11;
 
-    float scaleDivY = 0.1;
-    float scaleDivX;
+    QtCharts::QSplineSeries *series;
+    QtCharts::QChart *chart;
+    QtCharts::QChartView *chartView;
 
     int msecs = 10000;
     int period = 100;
 
     bool clearFlag = false;
-
-    void drawScale(QPainter& qp);
-    void drawTrajectory(QPainter& qp);
 
 public slots:
     void addTrajPoint(const OdomDataType& data);

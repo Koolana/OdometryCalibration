@@ -10,99 +10,38 @@ WidgetDrawPID::WidgetDrawPID(QWidget *parent) : QWidget(parent)
     this->setAutoFillBackground(true);
     this->setPalette(Pal);
 
-    this->scaleDivX = msecs / numVerticalLine;
-}
+    this->series = new QtCharts::QSplineSeries();
 
-void WidgetDrawPID::paintEvent(QPaintEvent *event) {
-    Q_UNUSED(event);
+    this->chartView = new QtCharts::QChartView();
 
-    QPainter qp(this);
-    this->drawScale(qp);
-    this->drawTrajectory(qp);
-}
+    this->chart = new QtCharts::QChart();
+    this->chart->addSeries(series);
+    this->chart->legend()->hide();
 
-void WidgetDrawPID::resizeEvent(QResizeEvent* event) {
-    Q_UNUSED(event);
+    this->chart->setToolTip(QString("График WW\n"
+                              "Количество отсчётов VV"));
 
-    if (this->size().width() > this->size().height()) {
-        this->numHorizontalLine = 10;
+    QtCharts::QValueAxis *axisX = new QtCharts::QValueAxis();
+    axisX->setTitleText("time, ms");
+    axisX->setLabelFormat("%i");
+    axisX->setRange(-this->msecs, 0);
+    axisX->setTickCount(this->numVerticalLine);
+    this->chart->addAxis(axisX, Qt::AlignBottom);
+    this->series->attachAxis(axisX);
 
-        this->numVerticalLine = int(10 * this->size().width() / this->size().height());
-        this->numVerticalLine += this->numVerticalLine % 2 == 0 ? 0 : 1;
-    } else {
-        this->numHorizontalLine = int(10 * this->size().height() / this->size().width());
-        this->numHorizontalLine += this->numHorizontalLine % 2 == 0 ? 0 : 1;
+    QtCharts::QValueAxis *axisY = new QtCharts::QValueAxis();
+    axisY->setTitleText("speed, m/sec");
+    axisY->setRange(-0.5, 0.5);
+    axisY->setLabelFormat("%.2f");
+    axisY->setTickCount(this->numHorizontalLine);
+    this->chart->addAxis(axisY, Qt::AlignLeft);
+    this->series->attachAxis(axisY);
 
-        this->numVerticalLine = 10;
-    }
+    this->chartView->setChart(this->chart);
 
-    this->update();
-}
-
-void WidgetDrawPID::drawScale(QPainter& qp) {
-    qp.save();
-
-    QPen pen;
-    pen.setWidth(1);
-    qp.setPen(pen);
-
-    for (int vl = 1; vl < this->numVerticalLine; vl++) {
-        qp.rotate(-90);
-        qp.drawText(-this->size().height() + 10,
-                     this->size().width() / this->numVerticalLine * vl - 2,
-                     QString::number((this->numVerticalLine - vl) * this->scaleDivX) + " ms");
-        qp.rotate(90);
-        qp.drawLine(float(this->size().width()) / float(this->numVerticalLine) * vl,
-                     0,
-                     float(this->size().width()) / float(this->numVerticalLine) * vl,
-                     this->size().height());
-    }
-
-    for (int hl = 1; hl < this->numHorizontalLine; hl++) {
-        if (hl == int(this->numHorizontalLine / 2)) {
-            pen.setWidth(2);
-            qp.setPen(pen);
-        } else {
-            pen.setWidth(1);
-            qp.setPen(pen);
-        }
-
-        qp.drawText(10,
-                     this->size().height() / this->numHorizontalLine * hl - 2,
-                     QString::number((this->numHorizontalLine / 2 - hl) * this->scaleDivY) + " m/sec");
-        qp.drawLine(0,
-                     float(this->size().height()) / float(this->numHorizontalLine) * hl,
-                     this->size().width(),
-                     float(this->size().height()) / float(this->numHorizontalLine) * hl);
-    }
-
-    qp.restore();
-}
-
-void WidgetDrawPID::drawTrajectory(QPainter& qp) {
-    if (this->trajPoints.count() < 2) {
-        return;
-    }
-
-    qp.save();
-
-    QPen pen(QColor(0, 0, 255), 2, Qt::SolidLine);
-    qp.setPen(pen);
-
-    QPointF prevPoint = this->trajPoints.first();
-
-    for (int i = 1; i < this->trajPoints.count(); i++) {
-        const QPointF* currPoint = &this->trajPoints.at(i);
-
-        qp.drawLine(prevPoint.x() / this->scaleDivX * this->size().width() / this->numVerticalLine + this->size().width(),
-        -prevPoint.y() / this->scaleDivY * this->size().height() / this->numHorizontalLine + this->size().height() / 2,
-        currPoint->x() / this->scaleDivX * this->size().width() / this->numVerticalLine + this->size().width(),
-        -currPoint->y() / this->scaleDivY * this->size().height() / this->numHorizontalLine + this->size().height() / 2);
-
-        prevPoint = *currPoint;
-    }
-
-    qp.restore();
+    auto layout = new QGridLayout();
+    layout->addWidget(this->chartView);
+    this->setLayout(layout);
 }
 
 void WidgetDrawPID::addTrajPoint(const OdomDataType& data) {
@@ -115,23 +54,23 @@ void WidgetDrawPID::addTrajPoint(const OdomDataType& data) {
     newPoint.setX(0);
     newPoint.setY(data.vx);
 
-    if (this->trajPoints.count() > 0) {
-        for (int i = 0; i < this->trajPoints.count(); i++) {
-            if (this->trajPoints[i].x() < - ((3*this->numVerticalLine) * this->scaleDivX)) {
-                this->trajPoints.remove(i);
-            } else {
-                this->trajPoints[i].setX(this->trajPoints[i].x() - this->period);
-            }
+    for (int i = 0; i < this->series->count(); i++) {
+        if (this->series->at(i).x() < -this->msecs) {
+            this->series->remove(i);
+        } else {
+            this->series->replace(i, this->series->at(i).x() - this->period,
+                                     this->series->at(i).y());
+
         }
     }
 
-    this->trajPoints.append(newPoint);
+    *this->series << newPoint;
 
     this->update();
 }
 
 void WidgetDrawPID::clear() {
-    this->trajPoints.clear();
+    this->series->clear();
 
     this->clearFlag = true;
 
