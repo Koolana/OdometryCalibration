@@ -61,9 +61,7 @@ void ModelRobotController::pollRobot() {
     }
 
     if (this->msgReceived) {
-        if (!this->clearFlag) {
-            this->controlRobot();
-        } else {
+        if (this->clearFlag) {
             this->clearFlag = false;
         }
 
@@ -72,7 +70,7 @@ void ModelRobotController::pollRobot() {
 
         this->mutex->lock();
 
-        this->qsp->write("o");
+        this->qsp->write("ot");
         this->qsp->flush();
 
         this->mutex->unlock();
@@ -86,13 +84,16 @@ void ModelRobotController::receiveFromSerial() {
 
     if (this->inputMsg->at(this->inputMsg->count() - 1) == '\n') {
         this->msgReceived = true;
+        this->controlRobot();
     }
 }
 
 void ModelRobotController::controlRobot() {
     QStringList parsedMsg = QString(this->inputMsg->data()).split(';');
 
-    if (!(parsedMsg.count() == 6)) {
+//    qDebug() << parsedMsg;
+
+    if (parsedMsg.count() < 6) {
         return;
     }
 
@@ -114,6 +115,17 @@ void ModelRobotController::controlRobot() {
     this->prevX = this->odomPoint->x;
     this->prevY = this->odomPoint->y;
     this->prevTh = this->odomPoint->th;
+
+    if (parsedMsg.count() == 10) {
+        PID pid;
+        pid.p = parsedMsg.at(6).toFloat();
+        pid.i = parsedMsg.at(7).toFloat();
+        pid.d = parsedMsg.at(8).toFloat();
+
+//        qDebug() << parsedMsg.at(5).toInt();
+
+        emit sendPIDwihAccuracy(pid, parsedMsg.at(5).toInt());
+    }
 }
 
 void ModelRobotController::moveInTest() {
@@ -309,10 +321,22 @@ void ModelRobotController::sendResetCmd() {
 //    qDebug() << "Move msg:" << "n";
 }
 
-void ModelRobotController::sendPID(const PID& data) {
+void ModelRobotController::sendPIDSetCmd(const PID& data) {
     QString msg = "k" + QString::number(data.p, 'f', 5) + " " +
                         QString::number(data.i, 'f', 5) + " " +
                         QString::number(data.d, 'f', 5) + "\n";
+
+    this->mutex->lock();
+
+    this->qsp->write(msg.toUtf8());
+    this->qsp->flush();
+    QThread::msleep(this->cmdTimeout);
+
+    this->mutex->unlock();
+}
+
+void ModelRobotController::sendPIDTuneCmd() {
+    QString msg = "a";
 
     this->mutex->lock();
 

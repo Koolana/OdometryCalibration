@@ -1,5 +1,7 @@
 #include "include/widgetpidsettings.h"
 
+#include <QDebug>
+
 WidgetPIDSettings::WidgetPIDSettings()
 {
     this->setTitle("PID settings");
@@ -31,6 +33,16 @@ WidgetPIDSettings::WidgetPIDSettings()
     this->globalLayout->setRowStretch(4, 1);
 
     this->setLayout(this->globalLayout);
+}
+
+void WidgetPIDSettings::setPID(const PID& data) {
+    this->leP->setText(QString::number(data.p));
+    this->leI->setText(QString::number(data.i));
+    this->leD->setText(QString::number(data.d));
+
+    this->update();
+
+    sendPID();
 }
 
 void WidgetPIDSettings::sendPID() {

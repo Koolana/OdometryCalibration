@@ -14,7 +14,6 @@ MainWindow::MainWindow(QWidget *parent)
     this->wd = new WidgetDraw();
 
     this->wdPID = new WidgetDrawPID();
-    this->wdPID->setVisible(false);
 
     this->bar = new QTabBar(this);
     this->bar->addTab("Odometry");
@@ -58,8 +57,10 @@ MainWindow::MainWindow(QWidget *parent)
     verticalLayout->addWidget(this->wc, 7);
 
     this->wsPID = new WidgetPIDSettings();
-    this->wsPID->setVisible(false);
-    verticalLayout->addWidget(this->wsPID, 9);
+    verticalLayout->addWidget(this->wsPID, 3);
+
+    this->waPID = new WidgetPidAutotune();
+    verticalLayout->addWidget(this->waPID, 6);
 
     this->mca = new ModelCalibrationAlg();
     connect(this->wrs, SIGNAL(savedParams(RobotParams)), this->mca, SLOT(changeRobotWidth(RobotParams)),  Qt::DirectConnection);
@@ -92,7 +93,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this->wrs, SIGNAL(savedParams(RobotParams)), this->mrc, SLOT(changeRobotParams(RobotParams)),  Qt::QueuedConnection);
 
     qRegisterMetaType<RobotParams>("PID");
-    connect(this->wsPID, SIGNAL(changedPID(PID)), this->mrc, SLOT(sendPID(PID)),  Qt::QueuedConnection);
+    connect(this->wsPID, SIGNAL(changedPID(PID)), this->mrc, SLOT(sendPIDSetCmd(PID)),  Qt::QueuedConnection);
+
+    connect(this->waPID, SIGNAL(tune()), this->mrc, SLOT(sendPIDTuneCmd()),  Qt::QueuedConnection);
+    connect(this->waPID, SIGNAL(sendPID(PID)), this->wsPID, SLOT(setPID(PID)),  Qt::QueuedConnection);
+    connect(this->mrc, SIGNAL(sendPIDwihAccuracy(PID, int)), this->waPID, SLOT(setPIDData(PID, int)),  Qt::QueuedConnection);
 
     this->threadForController->start();
     QMetaObject::invokeMethod(this->mrc, "init");
@@ -106,17 +111,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     QTimer::singleShot(100, this->wrs, SLOT(init()));
     QTimer::singleShot(100, this->wts, SLOT(init()));
+
+    this->changedTab(0);
 }
 
 void MainWindow::changedTab(int index) {
     switch (index) {
     case 0:
+        this->wdPID->setVisible(false);
+        this->wsPID->setVisible(false);
+        this->waPID->setVisible(false);
+
         this->wd->setVisible(true);
         this->wts->setVisible(true);
         this->wc->setVisible(true);
-
-        this->wdPID->setVisible(false);
-        this->wsPID->setVisible(false);
         break;
     case 1:
         this->wd->setVisible(false);
@@ -125,6 +133,7 @@ void MainWindow::changedTab(int index) {
 
         this->wdPID->setVisible(true);
         this->wsPID->setVisible(true);
+        this->waPID->setVisible(true);
         break;
     }
 }
