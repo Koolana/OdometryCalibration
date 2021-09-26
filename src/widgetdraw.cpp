@@ -190,10 +190,10 @@ void WidgetDraw::resizeEvent(QResizeEvent* event) {
     if (this->size().width() > this->size().height()) {
         this->numHorizontalLine = 10;
 
-        this->numVerticalLine = int(10 * this->size().width() / this->size().height());
+        this->numVerticalLine = this->size().height() ? int(10 * this->size().width() / this->size().height()) : 0;
         this->numVerticalLine += this->numVerticalLine % 2 == 0 ? 0 : 1;
     } else {
-        this->numHorizontalLine = int(10 * this->size().height() / this->size().width());
+        this->numHorizontalLine = this->size().width() ? int(10 * this->size().height() / this->size().width()) : 0;
         this->numHorizontalLine += this->numHorizontalLine % 2 == 0 ? 0 : 1;
 
         this->numVerticalLine = 10;

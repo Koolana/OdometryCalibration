@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QtMath>
 #include <QMutex>
+#include <QTime>
 
 #include "odomdatatype.h"
 
@@ -65,13 +66,15 @@ public slots:
     void sendStartCmd();
     void sendResetCmd();
     void sendStopCmd();
-    void sendPID(const PID& data);
+    void sendPIDSetCmd(const PID& data);
+    void sendPIDTuneCmd();
 
 signals:
     void connected(bool);
 
     void sendOdomPoint(const OdomDataType& data);
     void sendFinalPoint(const OdomDataType& data);
+    void sendPIDwihAccuracy(const PID& pid, int accuracy);
 
 };
 

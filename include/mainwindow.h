@@ -17,6 +17,7 @@
 
 #include "widgetdrawpid.h"
 #include "widgetpidsettings.h"
+#include "widgetpidautotune.h"
 
 Q_DECLARE_METATYPE(OdomDataType);
 Q_DECLARE_METATYPE(TestData);
@@ -38,6 +39,7 @@ private:
 
     WidgetDraw* wd;
     WidgetDrawPID* wdPID;
+    WidgetPidAutotune* waPID;
 
     WidgetRobotSettings* wrs;
     WidgetTestSettings* wts;

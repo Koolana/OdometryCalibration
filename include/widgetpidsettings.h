@@ -28,6 +28,9 @@ private:
 private slots:
     void sendPID();
 
+public slots:
+    void setPID(const PID&);
+
 signals:
     void changedPID(const PID&);
 };

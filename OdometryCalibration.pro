@@ -1,4 +1,4 @@
-QT       += core gui serialport
+QT       += core gui serialport charts
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -22,7 +22,8 @@ SOURCES += \
     src/widgetrobotsettings.cpp \
     src/widgettestsettings.cpp \
     src/widgetdrawpid.cpp \
-    src/widgetpidsettings.cpp
+    src/widgetpidsettings.cpp \
+    src/widgetpidautotune.cpp
 
 HEADERS += \
     include/itemdata.h \
@@ -35,7 +36,8 @@ HEADERS += \
     include/widgetrobotsettings.h \
     include/widgettestsettings.h \
     include/widgetdrawpid.h \
-    include/widgetpidsettings.h
+    include/widgetpidsettings.h \
+    include/widgetpidautotune.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
