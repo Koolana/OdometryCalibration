@@ -214,6 +214,8 @@ void Timer_finish()  {
     tuner.compute(); // тут производятся вычисления по своему таймеру
     analogWrite(MotorRpwm, tuner.getOutput());
     digitalWrite(MotorRdir, DirectionR);
+    analogWrite(MotorLpwm, tuner.getOutput());
+    digitalWrite(MotorLdir, DirectionR);
 
 //    tuner.debugText();
   
