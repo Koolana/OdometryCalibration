@@ -10,7 +10,7 @@ WidgetDrawPID::WidgetDrawPID(QWidget *parent) : QWidget(parent)
     this->setAutoFillBackground(true);
     this->setPalette(Pal);
 
-    this->series = new QtCharts::QSplineSeries();
+    this->series = new QtCharts::QLineSeries();
 
     this->chartView = new QtCharts::QChartView();
 

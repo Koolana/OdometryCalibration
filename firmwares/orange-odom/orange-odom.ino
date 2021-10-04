@@ -24,6 +24,9 @@
 #include <TroykaIMU.h>
 #include <Wire.h>
 
+#include "PIDtuner.h"  // GyverPID
+PIDtuner tuner;  // rele-mod
+
 // MegaADK DIGITAL PINS USABLE FOR INTERRUPTS 2, 3, 18, 19, 20, 21
 //                                                 I2C pins 20, 21
 
@@ -51,7 +54,7 @@ PID myPID1(&Input1,&Output1,&Setpoint1,Motor_2[0],Motor_2[1],Motor_2[2],DIRECT);
 PID myPID2(&Input2,&Output2,&Setpoint2,Motor_2[0],Motor_2[1],Motor_2[2],DIRECT);
 
 // Timer variables
-const long Timer1Interval=100000;                                // 100 ms = 10 times per sec - Timer interrupt interval
+const long Timer1Interval=25000;                                // 100 ms = 10 times per sec - Timer interrupt interval
 double dT = double(Timer1Interval)/1000000;           // период счета
 
 //Motor control variables
@@ -89,14 +92,15 @@ double SetW = 0;
 double maxSpeed = 0.544;  // максимальная линейная скорость при скважности 100%, в м/с
 int    PPR = 663;             // импульсов энкодера за оборот
 
-double CL = 0.939809;  // корректирующие коеффициенты для радиусов колес
-double CR = 1.06019;
+double CL = 1;  // 0.939809;  // корректирующие коеффициенты для радиусов колес
+double CR = 1;  // 1.06019;
 
 double yaw = 0;
 double x = 0;
 double y = 0;
 
 bool printflag = false;
+bool isTuningMode = false;
 bool is_connected = false;
 
 void printValue(double val, const char* namVal = NULL, bool withSignAndDouble = true);
@@ -151,6 +155,11 @@ void PIDInit() {
   myPID2.SetMode(AUTOMATIC);
   myPID1.SetOutputLimits(0,255);
   myPID2.SetOutputLimits(0,255);
+
+  myPID1.SetSampleTime(50);
+  myPID2.SetSampleTime(50);
+
+  tuner.setParameters(NORMAL, 130, 40, 2000, 3, 2000, dT * 1000);
 }
 void MotorsInit() { //Initialize motors variables
   DirectionR = LOW;
@@ -197,6 +206,24 @@ void Timer_finish()  {
   wheelImpR = 0;
   wheelImpL = 0;
 
+  if (isTuningMode) {
+    tuner.setInput(wheelSpeedR); // передаём текущее значение с датчика
+    tuner.compute(); // тут производятся вычисления по своему таймеру
+    analogWrite(MotorRpwm, tuner.getOutput());
+    digitalWrite(MotorRdir, DirectionR);
+    analogWrite(MotorLpwm, tuner.getOutput());
+    digitalWrite(MotorLdir, DirectionL);
+
+//    tuner.debugText();
+  
+    if (tuner.getAccuracy() > 95) {
+      analogWrite(MotorRpwm, 0);
+      analogWrite (MotorLpwm, 0);
+
+      isTuningMode = false;
+    }
+  }
+
   // пройденный колесом путь, м
   wheelRightS = ((wheelSpeedR / PPR) * 2 * 3.14 * R)*CR;  // 663  // метры L = 2*PI*R*n/N
   wheelLeftS  = ((wheelSpeedL / PPR) * 2 * 3.14 * R)*CL;  //*
@@ -221,20 +248,12 @@ void Timer_finish()  {
   // проверка
   Vr = (((2*V)+(omega*L))/(2*R))*R; //M/S
   Vl = (((2*V)-(omega*L))/(2*R))*R;
-
-//  printValue(V);  // linear velocity
-//  printValue(omega);  // angular velocity
-//
-//  printValue(yaw);  // yaw angle
-//  printValue(x);  // x position
-//  printValue(y);  // y position
-//
-//  Serial1.print("\n");
-//  Serial1.flush();
 }
+
 void Movement(int a,int b) {//move
   if (a < 13) {a = 0;}
   if (b < 13) {b = 0;}
+  
   analogWrite (MotorRpwm,a);      //motor1 move forward at speed a
   digitalWrite(MotorRdir,DirectionR);
   analogWrite (MotorLpwm,b);      //motor2 move forward at speed b
@@ -245,11 +264,15 @@ void Movement(int a,int b) {//move
 void PIDMovement(double a,double b) {
     // a, b - m/sec
 
-    if (a < 0) {a = abs(a); DirectionR = true;}
-    else {DirectionR = false;}
+  if (a < 0) {a = abs(a); DirectionR = true;}
+  else {DirectionR = false;}
 
-    if (b < 0) {b = abs(b); DirectionL = true;}
-    else {DirectionL = false;}
+  if (b < 0) {b = abs(b); DirectionL = true;}
+  else {DirectionL = false;}
+
+  if (isTuningMode) {
+    return;
+  }
 
   Setpoint1= (a * 255 /maxSpeed); // уставка скорости
   Setpoint2= (b * 255 /maxSpeed);
@@ -303,6 +326,35 @@ void get_messages_from_Serial1()
           break;
         }
 
+        
+        case 'a':
+        {
+          isTuningMode = true;
+          tuner.reset();
+          
+          break;
+        }
+
+        case 'k':
+        {
+
+          String line = Serial1.readStringUntil('\n');
+          line.toCharArray(buffer, line.length() + 1);
+
+          double p = atof(strtok(buffer, " "));
+
+          char* next = strchr(buffer, ' ');
+          double i = atof(strtok(next, " "));
+
+          next = strchr(next, ' ');
+          double d = atof(strtok(next, " "));
+
+          myPID1.SetTunings(p, i, d);
+          myPID2.SetTunings(p, i, d);
+
+          break;
+        }
+
         case 'd'://если d, то печатаем текущие значения полно
         {
           printValue(V, "V");
@@ -325,6 +377,15 @@ void get_messages_from_Serial1()
           printValue(yaw);  // yaw angle
           printValue(x);  // x position
           printValue(y);  // y position
+
+          if (Serial1.read() == 't') {
+              printValue(tuner.getAccuracy(), NULL, false); 
+  
+              printValue(tuner.getPID_p());
+              printValue(tuner.getPID_i());
+              printValue(tuner.getPID_d());
+          }
+            
           Serial1.print("\n");
 
           break;

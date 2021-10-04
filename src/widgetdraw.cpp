@@ -28,24 +28,25 @@ void WidgetDraw::paintEvent(QPaintEvent *event) {
 void WidgetDraw::drawScale(QPainter& qp) {
     qp.save();
 
-    QPen pen;
-    pen.setWidth(1);
-    qp.setPen(pen);
+    QPen penL(QColor(220, 220, 220, 255), 1, Qt::SolidLine);
+    QPen penT(QColor(0, 0, 0, 255), 1, Qt::SolidLine);
+//    pen.setWidth(1);
 
     for (int vl = 1; vl < this->numVerticalLine; vl++) {
         if (vl == int(this->numVerticalLine / 2)) {
-            pen.setWidth(2);
-            qp.setPen(pen);
+            penL.setWidth(2);
         } else {
-            pen.setWidth(1);
-            qp.setPen(pen);
+            penL.setWidth(1);
         }
 
         qp.rotate(-90);
+        qp.setPen(penT);
         qp.drawText(-this->size().height() + 10,
                      this->size().width() / this->numVerticalLine * vl - 2,
                      QString::number(-(this->numVerticalLine / 2 - vl) * this->scaleDiv) + " m");
         qp.rotate(90);
+
+        qp.setPen(penL);
         qp.drawLine(float(this->size().width()) / float(this->numVerticalLine) * vl,
                      0,
                      float(this->size().width()) / float(this->numVerticalLine) * vl,
@@ -54,16 +55,17 @@ void WidgetDraw::drawScale(QPainter& qp) {
 
     for (int hl = 1; hl < this->numHorizontalLine; hl++) {
         if (hl == int(this->numHorizontalLine / 2)) {
-            pen.setWidth(2);
-            qp.setPen(pen);
+            penL.setWidth(2);
         } else {
-            pen.setWidth(1);
-            qp.setPen(pen);
+            penL.setWidth(1);
         }
 
+        qp.setPen(penT);
         qp.drawText(10,
                      this->size().height() / this->numHorizontalLine * hl - 2,
                      QString::number((this->numHorizontalLine / 2 - hl) * this->scaleDiv) + " m");
+
+        qp.setPen(penL);
         qp.drawLine(0,
                      float(this->size().height()) / float(this->numHorizontalLine) * hl,
                      this->size().width(),

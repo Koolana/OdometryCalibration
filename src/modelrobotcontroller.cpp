@@ -138,7 +138,7 @@ void ModelRobotController::moveInTest() {
             this->sendMoveCmd(this->rp->linearSpeed, 0);
         }
 
-        if (this->state == 2 && this->currL > this->td->size) {
+        if (this->state == 2 && this->currL + qFabs(this->odomPoint->vx) / (1000 / this->robotTimer->interval()) >= this->td->size) {
             this->finish = true;
             this->state = 0;
             this->currL = 0;
@@ -167,7 +167,7 @@ void ModelRobotController::moveInTest() {
         case 4:
         case 6:
         case 8:
-            if (this->currL + this->odomPoint->vx / 10 > this->td->size) {
+            if (this->currL + qFabs(this->odomPoint->vx) / (1000 / this->robotTimer->interval()) >= this->td->size) {
                 this->state++;
                 this->sendStopCmd();
                 this->currTh = 0;
@@ -179,7 +179,7 @@ void ModelRobotController::moveInTest() {
         case 5:
         case 7:
         case 9:
-            if (this->currTh + this->odomPoint->vth / 10 > M_PI / 2) {
+            if (this->currTh + qFabs(this->odomPoint->vth) / (1000 / this->robotTimer->interval()) >= M_PI / 2) {
                 this->state++;
                 this->sendStopCmd();
                 this->currL = 0;
@@ -221,7 +221,7 @@ void ModelRobotController::moveInTest() {
             break;
 
         case 2:
-            if (this->currTh + this->odomPoint->vth / 10 > 2 * M_PI) {
+            if (this->currTh + qFabs(this->odomPoint->vth) / (1000 / this->robotTimer->interval()) >= 2 * M_PI) {
                 this->odomPoint->numIter++;
 
                 if (!(this->odomPoint->numIter % this->td->numIter == 0)) {

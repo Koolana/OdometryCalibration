@@ -26,7 +26,7 @@ private:
     int numVerticalLine = 11;
     int numHorizontalLine = 11;
 
-    QtCharts::QSplineSeries *series;
+    QtCharts::QLineSeries *series;
     QtCharts::QChart *chart;
     QtCharts::QChartView *chartView;
 
