@@ -307,6 +307,8 @@ void ModelRobotController::sendResetCmd() {
 
     this->sendStopCmd();
 
+    this->resetParams();
+
     this->mutex->lock();
 
     this->qsp->write("n");

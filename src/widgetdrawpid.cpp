@@ -31,7 +31,7 @@ WidgetDrawPID::WidgetDrawPID(QWidget *parent) : QWidget(parent)
 
     QtCharts::QValueAxis *axisY = new QtCharts::QValueAxis();
     axisY->setTitleText("speed, m/sec");
-    axisY->setRange(-0.5, 0.5);
+    axisY->setRange(-0.8, 0.8);
     axisY->setLabelFormat("%.2f");
     axisY->setTickCount(this->numHorizontalLine);
     this->chart->addAxis(axisY, Qt::AlignLeft);

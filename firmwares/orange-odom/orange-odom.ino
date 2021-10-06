@@ -54,7 +54,7 @@ PID myPID1(&Input1,&Output1,&Setpoint1,Motor_2[0],Motor_2[1],Motor_2[2],DIRECT);
 PID myPID2(&Input2,&Output2,&Setpoint2,Motor_2[0],Motor_2[1],Motor_2[2],DIRECT);
 
 // Timer variables
-const long Timer1Interval=25000;                                // 100 ms = 10 times per sec - Timer interrupt interval
+const long Timer1Interval=100000;                                // 100 ms = 10 times per sec - Timer interrupt interval
 double dT = double(Timer1Interval)/1000000;           // период счета
 
 //Motor control variables
@@ -103,6 +103,12 @@ bool printflag = false;
 bool isTuningMode = false;
 bool is_connected = false;
 
+bool isMovingR = false;
+bool isMovingL = false;
+
+unsigned long prevTimeR = 0;
+unsigned long prevTimeL = 0;
+
 void printValue(double val, const char* namVal = NULL, bool withSignAndDouble = true);
 
 void setup() {
@@ -115,16 +121,18 @@ void loop() {
   // --------------- Смена уставки скорости ----------
   Motor();
   // -------------------------------------------------
- }
+}
  //loop ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void Motor() {
   CheckSettingsSpeed();
   PIDMovement(SetSpeedR,SetSpeedL);  // передается линейная скорость колес, в м/сек
 }
+
 void SetSpeed(double LinearVelocity, double AngularVelocity) {
   SetSpeedR = (((2*LinearVelocity)+(AngularVelocity*L))/(2*R))*R;   //M/S - линейная скорость колеса
   SetSpeedL = (((2*LinearVelocity)-(AngularVelocity*L))/(2*R))*R;
 }
+
 void CheckSettingsSpeed() {
   if (settingSpeed) {
       settingSpeed = false;
@@ -141,6 +149,7 @@ void reset_var() {
   SetSpeedR = 0;   //M/S - линейная скорость колеса
   SetSpeedL = 0;
 }
+
 void Init() {
   Wire.begin();
   Serial1.begin(57600);  // 57600  //Initialize the Serial11 port
@@ -161,6 +170,7 @@ void PIDInit() {
 
   tuner.setParameters(NORMAL, 130, 40, 2000, 3, 2000, dT * 1000);
 }
+
 void MotorsInit() { //Initialize motors variables
   DirectionR = LOW;
   DirectionL = LOW;
@@ -177,6 +187,7 @@ void MotorsInit() { //Initialize motors variables
   analogWrite (MotorRpwm, SetSpeedR);
   analogWrite (MotorLpwm, SetSpeedL);
 }
+
 void EncoderInit() { //Initialize encoder interruption
 
   pinMode(encoderRpinA,INPUT);  // Right weel
@@ -193,28 +204,38 @@ void EncoderInit() { //Initialize encoder interruption
   Timer1.attachInterrupt(Timer_finish);
 
 }
+
 void WheelPulseR() {   // Счетчик спиц правого колеса
-  wheelImpR ++;
+  if (isMovingR) {
+    wheelRightV = ((2 * 3.14 * R) / PPR) / double(micros() - prevTimeR) * 1000000;
+  } else {
+    wheelRightV = 0;
+    isMovingR = true;
+  }
+
+  prevTimeR = micros();
 }
+
 void WheelPulseL() {   // Счетчик спиц левого колеса
-  wheelImpL ++;
+  if (isMovingL) {
+    wheelLeftV = ((2 * 3.14 * R) / PPR) / double(micros() - prevTimeL) * 1000000;
+  } else {
+    wheelLeftV = 0;
+    isMovingL = true;
+  }
+
+  prevTimeL = micros();
 }
+
 void Timer_finish()  {
-  wheelSpeedR = double(wheelImpR / dT); // число импульсов за сек
-  wheelSpeedL = double(wheelImpL / dT); // число импульсов за сек
-
-  wheelImpR = 0;
-  wheelImpL = 0;
-
   if (isTuningMode) {
-    tuner.setInput(wheelSpeedR); // передаём текущее значение с датчика
+    tuner.setInput(wheelRightV); // передаём текущее значение с датчика
     tuner.compute(); // тут производятся вычисления по своему таймеру
+    
     analogWrite(MotorRpwm, tuner.getOutput());
     digitalWrite(MotorRdir, DirectionR);
     analogWrite(MotorLpwm, tuner.getOutput());
     digitalWrite(MotorLdir, DirectionL);
-
-//    tuner.debugText();
   
     if (tuner.getAccuracy() > 95) {
       analogWrite(MotorRpwm, 0);
@@ -224,13 +245,15 @@ void Timer_finish()  {
     }
   }
 
-  // пройденный колесом путь, м
-  wheelRightS = ((wheelSpeedR / PPR) * 2 * 3.14 * R)*CR;  // 663  // метры L = 2*PI*R*n/N
-  wheelLeftS  = ((wheelSpeedL / PPR) * 2 * 3.14 * R)*CL;  //*
+  if (micros() - prevTimeR > 100000) {
+    wheelRightV = 0;
+    isMovingR = false;
+  }
 
-  // линейная скорость колеса
-  wheelRightV = wheelRightS/ 1; // mетры за сек
-  wheelLeftV  = wheelLeftS / 1;
+  if (micros() - prevTimeL > 100000) {
+    wheelLeftV = 0;
+    isMovingR = false;
+  }
 
   // угловая скорость колеса
   omegaRight = wheelRightV/R;   // rad за сек

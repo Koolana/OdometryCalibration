@@ -24,7 +24,7 @@ private:
     QVector<QPointF> trajPoints;
 
     int numVerticalLine = 11;
-    int numHorizontalLine = 11;
+    int numHorizontalLine = 17;
 
     QtCharts::QLineSeries *series;
     QtCharts::QChart *chart;
