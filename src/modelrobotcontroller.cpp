@@ -372,6 +372,16 @@ void ModelRobotController::changeRobotParams(const RobotParams& data) {
     rp->linearSpeed = data.linearSpeed;
     rp->width = data.width ;
 
+    if (td->typeTest == Tests::CIRCLE) {
+        this->prevSpeedRotate = this->prevSpeedRotate ? this->prevSpeedRotate * qFabs(this->rp->linearSpeed / this->prevSpeedLinear) : 0;
+    } else{
+        this->prevSpeedRotate = this->prevSpeedRotate ? this->prevSpeedRotate * qFabs(this->rp->angularSpeed / this->prevSpeedRotate) : 0;
+    }
+
+    this->prevSpeedLinear = this->prevSpeedLinear ? this->prevSpeedLinear * qFabs(this->rp->linearSpeed / this->prevSpeedLinear) : 0;
+
+    this->sendStartCmd();
+
 //    qDebug() << "Robot params changed" << rp->linearSpeed << rp->angularSpeed;
 }
 

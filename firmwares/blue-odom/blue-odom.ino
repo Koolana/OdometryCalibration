@@ -51,7 +51,7 @@ unsigned long wheelImpR = 0; // число импульсов с энкодер�
 unsigned long wheelImpL = 0; // число импульсов с энкодера левого колеса
 
 //PID variables
-double Motor_2[3] = {0.005, 7, 0.005}; // {0.1,3,0};                //PID parameters [P,I,D]
+double Motor_2[3] = {1,5,0}; // {0.1,3,0};                //PID parameters [P,I,D]
 double Setpoint1, Input1, Output1;                 //PID input&output values for Motor1
 double Setpoint2, Input2, Output2;                 //PID input&output values for Motor2
 

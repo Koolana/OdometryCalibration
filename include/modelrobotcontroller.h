@@ -31,8 +31,8 @@ private:
     float prevY = 0;
     float prevTh = 0;
 
-    float prevSpeedLinear;
-    float prevSpeedRotate;
+    float prevSpeedLinear = 0;
+    float prevSpeedRotate = 0;
 
     float currL = 0;
     float currTh = 0;
