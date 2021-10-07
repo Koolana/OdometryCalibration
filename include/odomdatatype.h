@@ -6,6 +6,7 @@ enum Tests
     LINE,
     SQUARE,
     CIRCLE,
+    NONE,
     ERROR,
 };
 

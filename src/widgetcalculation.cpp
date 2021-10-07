@@ -97,7 +97,7 @@ void WidgetCalculation::exportToFile() {
         dataList.append(((ItemData*)this->wDataList->itemWidget(item))->getData());
     }
 
-    QString dirPath = this->dialog->getExistingDirectory(this, "Select a folder:",
+    QString dirPath = this->dialog->getExistingDirectory(this, "Select a folder",
                                                    QDir::homePath(), QFileDialog::DontUseNativeDialog | QFileDialog::ShowDirsOnly);
 
     QFile file(dirPath + "/exported.csv");

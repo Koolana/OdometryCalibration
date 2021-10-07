@@ -11,7 +11,7 @@ WidgetRobotSettings::WidgetRobotSettings()
     this->lePathToDevice = new QLineEdit("ttyACM0");
     globalLayout->addWidget(this->lePathToDevice, 0, 0, 1, 3);
 
-    this->btnOpenDevice = new QPushButton("Open");
+    this->btnOpenDevice = new QPushButton("Connect");
     connect(this->btnOpenDevice, SIGNAL(clicked()), this, SLOT(openDevice()));
     globalLayout->addWidget(this->btnOpenDevice, 0, 3, 1, 1);
 

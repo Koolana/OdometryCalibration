@@ -21,12 +21,21 @@ void ModelRobotController::init() {
 
     this->robotTimer = new QTimer();
     connect(this->robotTimer, SIGNAL(timeout()), this, SLOT(pollRobot()));
+
+    this->checkConnectTimer = new QTimer();
+    connect(this->checkConnectTimer, SIGNAL(timeout()), this, SLOT(timeoutRobot()));
 }
 
 void ModelRobotController::openDevice(const QString& devPath) {
+    this->checkConnectTimer->stop();
+
     if (this->qsp->isOpen()) {
+        emit connected(false);
+
         this->robotTimer->stop();
         this->qsp->close();
+
+        QThread::msleep(500);
     }
 
     this->qsp->setPortName(devPath);
@@ -46,6 +55,7 @@ void ModelRobotController::openDevice(const QString& devPath) {
 
         this->msgReceived = true;
         this->clearFlag = false;
+        this->isInitState = true;
         this->resetParams();
 
         this->robotTimer->start(100);
@@ -68,14 +78,35 @@ void ModelRobotController::pollRobot() {
         this->inputMsg->clear();
         this->qsp->clear();
 
+        this->checkConnectTimer->start(1000);
+
         this->mutex->lock();
 
-        this->qsp->write("ot");
-        this->qsp->flush();
+        if (this->isInitState) {
+            this->qsp->write("i");
+            this->qsp->flush();
+        } else {
+            this->qsp->write("o");
+
+            if (this->isPIDTuneState) {
+                this->qsp->write("t");
+            }
+
+            this->qsp->flush();
+        }
 
         this->mutex->unlock();
 
         this->msgReceived = false;
+    }
+}
+
+void ModelRobotController::timeoutRobot() {
+    emit connected(false);
+
+    if (this->qsp->isOpen()) {
+        this->robotTimer->stop();
+        this->qsp->close();
     }
 }
 
@@ -91,7 +122,16 @@ void ModelRobotController::receiveFromSerial() {
 void ModelRobotController::controlRobot() {
     QStringList parsedMsg = QString(this->inputMsg->data()).split(';');
 
-//    qDebug() << parsedMsg;
+    if (this->isInitState) {
+        PID pid;
+        pid.p = parsedMsg.at(0).toFloat();
+        pid.i = parsedMsg.at(1).toFloat();
+        pid.d = parsedMsg.at(2).toFloat();
+
+        emit sendPIDwihAccuracy(pid, 0);
+
+        this->isInitState = false;
+    }
 
     if (parsedMsg.count() < 6) {
         return;
@@ -116,11 +156,15 @@ void ModelRobotController::controlRobot() {
     this->prevY = this->odomPoint->y;
     this->prevTh = this->odomPoint->th;
 
-    if (parsedMsg.count() == 10) {
+    if (parsedMsg.count() == 11) {
         PID pid;
         pid.p = parsedMsg.at(6).toFloat();
         pid.i = parsedMsg.at(7).toFloat();
         pid.d = parsedMsg.at(8).toFloat();
+
+        if (parsedMsg.at(9).toInt()) {
+            this->isPIDTuneState = false;
+        }
 
 //        qDebug() << parsedMsg.at(5).toInt();
 
@@ -246,9 +290,23 @@ void ModelRobotController::moveInTest() {
             break;
         }
 
+        case Tests::NONE:
+            switch (this->state) {
+            case 0:
+                break;
+            case 1:
+                this->state++;
+                this->sendMoveCmd(this->rp->linearSpeed, 0);
+
+                break;
+            }
+
+            break;
+
         case Tests::ERROR:
             break;
         }
+
 }
 
 void ModelRobotController::sendMoveCmd(float speedLinear, float speedRotate) {
@@ -277,6 +335,8 @@ void ModelRobotController::sendStopCmd() {
         return;
     }
 
+    this->isPaused = true;
+
     this->mutex->lock();
 
     this->qsp->write("p");
@@ -292,6 +352,8 @@ void ModelRobotController::sendStartCmd() {
     if (!this->qsp->isOpen()) {
         return;
     }
+
+    this->isPaused = false;
 
     if (this->state == 0) {
         this->state = 1;
@@ -338,15 +400,19 @@ void ModelRobotController::sendPIDSetCmd(const PID& data) {
 }
 
 void ModelRobotController::sendPIDTuneCmd() {
-    QString msg = "a";
+    if (!isPIDTuneState) {
+        this->isPIDTuneState = true;
 
-    this->mutex->lock();
+        QString msg = "a";
 
-    this->qsp->write(msg.toUtf8());
-    this->qsp->flush();
-    QThread::msleep(this->cmdTimeout);
+        this->mutex->lock();
 
-    this->mutex->unlock();
+        this->qsp->write(msg.toUtf8());
+        this->qsp->flush();
+        QThread::msleep(this->cmdTimeout);
+
+        this->mutex->unlock();
+    }
 }
 
 void ModelRobotController::resetParams() {
@@ -370,7 +436,7 @@ void ModelRobotController::changeRotateDir(bool isCW) {
 void ModelRobotController::changeRobotParams(const RobotParams& data) {
     rp->angularSpeed = data.angularSpeed;
     rp->linearSpeed = data.linearSpeed;
-    rp->width = data.width ;
+    rp->width = data.width;
 
     if (td->typeTest == Tests::CIRCLE) {
         this->prevSpeedRotate = this->prevSpeedRotate ? this->prevSpeedRotate * qFabs(this->rp->linearSpeed / this->prevSpeedLinear) : 0;
@@ -380,17 +446,28 @@ void ModelRobotController::changeRobotParams(const RobotParams& data) {
 
     this->prevSpeedLinear = this->prevSpeedLinear ? this->prevSpeedLinear * qFabs(this->rp->linearSpeed / this->prevSpeedLinear) : 0;
 
-    this->sendStartCmd();
+    if (this->state != 0 && !this->isPaused) {
+        this->sendMoveCmd(this->prevSpeedLinear, this->prevSpeedRotate);
+    }
 
 //    qDebug() << "Robot params changed" << rp->linearSpeed << rp->angularSpeed;
 }
 
 void ModelRobotController::changeTestData(const TestData& data) {
-    td->numIter = data.numIter;
-    td->size = data.size;
-    td->typeTest = data.typeTest;
+    this->td->numIter = data.numIter;
+    this->td->size = data.size;
+    this->td->typeTest = data.typeTest;
+    this->prevTest = data.typeTest;
 
 //    qDebug() << "Test params changed" << td->size << td->typeTest;
+}
+
+void ModelRobotController::changeTestMode(bool isPID) {
+    if (isPID) {
+        this->td->typeTest = Tests::NONE;
+    } else {
+        this->td->typeTest = this->prevTest;
+    }
 }
 
 ModelRobotController::~ModelRobotController() {

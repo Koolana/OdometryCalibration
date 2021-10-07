@@ -26,6 +26,7 @@ private:
     bool msgReceived = true;
 
     QTimer *robotTimer;
+    QTimer *checkConnectTimer;
 
     float prevX = 0;
     float prevY = 0;
@@ -41,10 +42,15 @@ private:
     bool finish = false;
     int cmdTimeout = 500;
     bool clearFlag = false;
+    bool isPaused = false;
+    bool isInitState = true;
+    bool isPIDTuneState = false;
 
     RobotParams* rp;
     TestData* td;
     OdomDataType* odomPoint;
+
+    Tests prevTest = Tests::ERROR;
 
     void controlRobot();
     void moveInTest();
@@ -54,6 +60,7 @@ private:
 private slots:
     void receiveFromSerial();
     void pollRobot();
+    void timeoutRobot();
 
 public slots:
     void init();
@@ -62,6 +69,7 @@ public slots:
     void changeRotateDir(bool);
     void changeRobotParams(const RobotParams&);
     void changeTestData(const TestData&);
+    void changeTestMode(bool isPID);
 
     void sendStartCmd();
     void sendResetCmd();

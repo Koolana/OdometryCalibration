@@ -125,6 +125,8 @@ void MainWindow::changedTab(int index) {
         this->wd->setVisible(true);
         this->wts->setVisible(true);
         this->wc->setVisible(true);
+
+        this->mrc->changeTestMode(false);
         break;
     case 1:
         this->wd->setVisible(false);
@@ -134,6 +136,8 @@ void MainWindow::changedTab(int index) {
         this->wdPID->setVisible(true);
         this->wsPID->setVisible(true);
         this->waPID->setVisible(true);
+
+        this->mrc->changeTestMode(true);
         break;
     }
 }

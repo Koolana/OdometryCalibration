@@ -324,7 +324,17 @@ void get_messages_from_Serial()
     {
       switch (order_received)
       {
+        case 'i':
+        {
+          printValue(Motor_2[0]);
+          printValue(Motor_2[1]);
+          printValue(Motor_2[2]);
 
+          Serial.print("\n");
+          
+          break;
+        }
+        
         case 'v'://если v, то считываем уставку по скорости
           {
 
@@ -399,6 +409,7 @@ void get_messages_from_Serial()
               printValue(tuner.getPID_p());
               printValue(tuner.getPID_i());
               printValue(tuner.getPID_d());
+              printValue(isTuningMode ? 0 : 1, NULL, false);
             }
             
             Serial.print("\n");
