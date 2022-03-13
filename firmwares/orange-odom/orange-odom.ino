@@ -21,7 +21,7 @@
 #include <LiquidCrystal.h>
 // #include <Check_times.cpp>
 
-#include <TroykaIMU.h>
+// #include <TroykaIMU.h>
 #include <Wire.h>
 
 #include "PIDtuner.h"  // GyverPID

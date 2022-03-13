@@ -156,6 +156,14 @@ void ModelRobotController::controlRobot() {
     this->prevY = this->odomPoint->y;
     this->prevTh = this->odomPoint->th;
 
+    this->progressIsChanged = (this->inProgress != parsedMsg.at(5).toInt() ? 0 : 1);
+
+    if (this->progressReaded) {
+        this->inProgress = parsedMsg.at(5).toInt() ? 0 : 1;
+    }
+
+//    qDebug() << this->inProgress;
+
     if (parsedMsg.count() == 11) {
         PID pid;
         pid.p = parsedMsg.at(6).toFloat();
@@ -179,14 +187,17 @@ void ModelRobotController::moveInTest() {
     case Tests::LINE:
         if (this->state == 1) {
             this->state = 2;
+            this->sendTestType(LineMove, this->td->size);
+            this->progressReaded = false;
             this->sendMoveCmd(this->rp->linearSpeed, 0);
         }
 
-        if (this->state == 2 && this->currL + qFabs(this->odomPoint->vx) / (1000 / this->robotTimer->interval()) >= this->td->size) {
+        if (this->state == 2 && !this->inProgress && this->progressIsChanged) {
             this->finish = true;
-            this->state = 0;
             this->currL = 0;
-            this->sendStopCmd();
+            this->state = 0;
+        } else {
+            this->progressReaded = true;
         }
 
         if (qFabs(this->odomPoint->vx) < 0.01 && this->finish) {
@@ -204,6 +215,8 @@ void ModelRobotController::moveInTest() {
 
         case 1:
             this->state++;
+            this->sendTestType(LineMove, this->td->size);
+            this->progressReaded = false;
             this->sendMoveCmd(this->rp->linearSpeed, 0);
             break;
 
@@ -211,11 +224,14 @@ void ModelRobotController::moveInTest() {
         case 4:
         case 6:
         case 8:
-            if (this->currL + qFabs(this->odomPoint->vx) / (1000 / this->robotTimer->interval()) >= this->td->size) {
+            if (!this->inProgress && this->progressIsChanged) {
                 this->state++;
-                this->sendStopCmd();
+                this->sendTestType(RotateMove, 1.57);
+                this->progressReaded = false;
                 this->currTh = 0;
                 this->sendMoveCmd(0, (this->odomPoint->isClockwise ? -1 : 1) * this->rp->angularSpeed);
+            } else {
+                this->progressReaded = true;
             }
             break;
 
@@ -223,9 +239,10 @@ void ModelRobotController::moveInTest() {
         case 5:
         case 7:
         case 9:
-            if (this->currTh + qFabs(this->odomPoint->vth) / (1000 / this->robotTimer->interval()) >= M_PI / 2) {
+            if (!this->inProgress && this->progressIsChanged) {
                 this->state++;
-                this->sendStopCmd();
+                this->sendTestType(LineMove, this->td->size);
+                this->progressReaded = false;
                 this->currL = 0;
 
                 if (this->state == 10) {
@@ -237,6 +254,8 @@ void ModelRobotController::moveInTest() {
                 } else {
                     this->sendMoveCmd(this->rp->linearSpeed, 0);
                 }
+            } else {
+                this->progressReaded = true;
             }
             break;
         case 10:
@@ -307,6 +326,36 @@ void ModelRobotController::moveInTest() {
             break;
         }
 
+}
+
+void ModelRobotController::sendTestType(CmdTypes type, double val) {
+    if (type == 0) {
+        QString msg = "tl" + QString::number(val, 'f', 2) + "\n";
+
+        this->mutex->lock();
+
+        this->qsp->write(msg.toUtf8());
+        this->qsp->flush();
+        QThread::msleep(this->cmdTimeout);
+
+        this->mutex->unlock();
+
+//        qDebug() << "Test msg:" << msg;
+    }
+
+    if (type == 1) {
+        QString msg = "ta" + QString::number(val, 'f', 2) + "\n";
+
+        this->mutex->lock();
+
+        this->qsp->write(msg.toUtf8());
+        this->qsp->flush();
+        QThread::msleep(this->cmdTimeout);
+
+        this->mutex->unlock();
+
+//        qDebug() << "Test msg:" << msg;
+    }
 }
 
 void ModelRobotController::sendMoveCmd(float speedLinear, float speedRotate) {

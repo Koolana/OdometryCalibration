@@ -19,6 +19,12 @@ public:
     ~ModelRobotController();
 
 private:
+    enum CmdTypes
+    {
+        LineMove,
+        RotateMove,
+    };
+
     QSerialPort *qsp;
     QByteArray *inputMsg;
     QMutex *mutex;
@@ -46,6 +52,10 @@ private:
     bool isInitState = true;
     bool isPIDTuneState = false;
 
+    bool inProgress = false;
+    bool progressIsChanged = false;
+    bool progressReaded = true;
+
     RobotParams* rp;
     TestData* td;
     OdomDataType* odomPoint;
@@ -54,6 +64,7 @@ private:
 
     void controlRobot();
     void moveInTest();
+    void sendTestType(CmdTypes type, double val);
     void sendMoveCmd(float speedLinear, float speedRotate);
     void resetParams();
 
