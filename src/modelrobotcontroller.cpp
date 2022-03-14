@@ -106,7 +106,30 @@ void ModelRobotController::timeoutRobot() {
 
     if (this->qsp->isOpen()) {
         this->robotTimer->stop();
+        this->checkConnectTimer->stop();
         this->qsp->close();
+
+        QThread::msleep(1000);
+    }
+
+    if (this->qsp->open(QIODevice::ReadWrite)) {
+        this->qsp->setBaudRate(QSerialPort::Baud57600);
+        this->qsp->setDataBits(QSerialPort::Data8);
+        this->qsp->setParity(QSerialPort::NoParity);
+        this->qsp->setStopBits(QSerialPort::OneStop);
+        this->qsp->setFlowControl(QSerialPort::NoFlowControl);
+
+        emit connected(true);
+
+        QThread::sleep(1);
+
+        this->qsp->clear();
+
+        this->msgReceived = true;
+
+        this->robotTimer->start(100);
+    } else {
+        emit connected(false);
     }
 }
 
@@ -211,6 +234,7 @@ void ModelRobotController::moveInTest() {
     case Tests::SQUARE:
         switch (this->state) {
         case 0:
+            this->progressReaded = true;
             break;
 
         case 1:

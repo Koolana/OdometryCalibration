@@ -14,5 +14,9 @@
 #define MAX_SPEED 0.544
 #define PPR 1450
 
+#define P 1
+#define I 5
+#define D 0
+
 #define CL 1
 #define CR 1

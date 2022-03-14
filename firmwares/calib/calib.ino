@@ -30,7 +30,9 @@
 PIDtuner tuner;  // rele-mod
 
 #include "PIDtuner2.h"  // GyverPID
-#include "configs/blue.h"
+// #include "configs/blue.h"
+#include "configs/orange.h"
+
 //PIDtuner2 tuner;  // Cohen-Coon mod
 
 // MegaADK DIGITAL PINS USABLE FOR INTERRUPTS 2, 3, 18, 19, 20, 21
@@ -55,7 +57,7 @@ long long prevWheelImpR = 0; // число импульсов с энкодер�
 long long prevWheelImpL = 0; // число импульсов с энкодера левого колеса
 
 //PID variables
-double Motor_2[3] = {1,5,0}; // {0.1,3,0};                //PID parameters [P,I,D]
+double Motor_2[3] = {P, I, D}; // {0.1,3,0};                //PID parameters [P,I,D]
 double Setpoint1, Input1, Output1;                 //PID input&output values for Motor1
 double Setpoint2, Input2, Output2;                 //PID input&output values for Motor2
 
@@ -126,7 +128,7 @@ void setup() {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Главный цикл ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void loop() {
   // --------------- Чтение порта --------------------
-  get_messages_from_Serial();
+  get_messages_from_SERIAL();
   // --------------- Смена уставки скорости ----------
   Motor();
   // -------------------------------------------------
@@ -159,8 +161,8 @@ void reset_var() {
 
 void Init() {
   Wire.begin();
-  Serial.begin(57600);  // 57600  //Initialize the Serial1 port
-  while (!Serial) ; // while the Serial stream is not open, do nothing
+  SERIAL.begin(57600);  // 57600  //Initialize the SERIAL1 port
+  while (!SERIAL) ; // while the SERIAL stream is not open, do nothing
   MotorsInit();
   EncoderInit();//Initialize encoder
   PIDInit();
@@ -338,12 +340,12 @@ void PIDMovement(double a, double b) {
   // Movement (int (a * 255 / maxSpeed), int(b * 255 / maxSpeed));
 }
 
-void get_messages_from_Serial()
+void get_messages_from_SERIAL()
 {
-  if (Serial.available() > 0)
+  if (SERIAL.available() > 0)
   {
     // The first byte received is the instruction
-    int order_received = Serial.read();
+    int order_received = SERIAL.read();
 
     if (order_received == 's')
     {
@@ -351,7 +353,7 @@ void get_messages_from_Serial()
       if (!is_connected)
       {
         is_connected = true;
-        Serial.print("r");
+        SERIAL.print("r");
       }
     }
     else
@@ -364,7 +366,7 @@ void get_messages_from_Serial()
           printValue(Motor_2[1]);
           printValue(Motor_2[2]);
 
-          Serial.print("\n");
+          SERIAL.print("\n");
 
           break;
         }
@@ -372,7 +374,7 @@ void get_messages_from_Serial()
         case 'v'://если v, то считываем уставку по скорости
           {
 
-            String line = Serial.readStringUntil('\n');// считываем скорости для левого и правого колеса [40 50]
+            String line = SERIAL.readStringUntil('\n');// считываем скорости для левого и правого колеса [40 50]
             line.toCharArray(buffer, 10); //переводим в char
             LinearVelocity = atof(strtok(buffer, " ")); //разделяем на скорости левого и правого колеса
             AngularVelocity = atof(strtok(NULL,  " "));
@@ -396,7 +398,7 @@ void get_messages_from_Serial()
         case 'k':
           {
 
-            String line = Serial.readStringUntil('\n');
+            String line = SERIAL.readStringUntil('\n');
             line.toCharArray(buffer, line.length() + 1);
 
             double p = atof(strtok(buffer, " "));
@@ -422,7 +424,7 @@ void get_messages_from_Serial()
             printValue(x, "x");
             printValue(y, "y");
 
-            Serial.print("\n");
+            SERIAL.print("\n");
 
             break;
           }
@@ -436,9 +438,9 @@ void get_messages_from_Serial()
             printValue(x);  // x position
             printValue(y);  // y position
 
-            Serial.print(testFinishR && testFinishL);
+            SERIAL.print(testFinishR && testFinishL);
 
-            if (Serial.read() == 't') {
+            if (SERIAL.read() == 't') {
 //              printValue(tuner.getState());
               printValue(tuner.getAccuracy(), NULL, false);
 
@@ -448,7 +450,7 @@ void get_messages_from_Serial()
               printValue(isTuningMode ? 0 : 1, NULL, false);
             }
 
-            Serial.print("\n");
+            SERIAL.print("\n");
 
             break;
           }
@@ -462,8 +464,8 @@ void get_messages_from_Serial()
 
             settingSpeed = true;
 
-            //          Serial.print("Stop command");
-            //          Serial.print("\n");
+            //          SERIAL.print("Stop command");
+            //          SERIAL.print("\n");
 
             break;
           }
@@ -476,11 +478,11 @@ void get_messages_from_Serial()
 
         case 't':
           {
-            while(Serial.available() == 0) {}
-            char type = Serial.read();
+            while(SERIAL.available() == 0) {}
+            char type = SERIAL.read();
 
             if (type == 'l') {
-              String line = Serial.readStringUntil('\n');
+              String line = SERIAL.readStringUntil('\n');
               float targetLine = line.toFloat();
 
               numRightPulse = targetLine / (2 * 3.14 * R / PPR);
@@ -497,7 +499,7 @@ void get_messages_from_Serial()
             }
 
             if (type == 'a') {
-              String line = Serial.readStringUntil('\n');
+              String line = SERIAL.readStringUntil('\n');
               float targetAngle = line.toFloat();
 
               numRightPulse = targetAngle * L / (2 * R) / (2 * 3.14) * PPR;
@@ -513,7 +515,7 @@ void get_messages_from_Serial()
               testFinishL = false;
             }
 
-            Serial.print("\n");
+            SERIAL.print("\n");
 
             break;
           }
@@ -525,19 +527,19 @@ void get_messages_from_Serial()
       }
     }
 
-    Serial.flush();
+    SERIAL.flush();
   }
 }
 
 void printValue(double val, const char* namVal, bool withSignAndDouble) {
-  Serial.print(namVal == NULL ? "" : String(namVal) + ": ");
+  SERIAL.print(namVal == NULL ? "" : String(namVal) + ": ");
 
   if (withSignAndDouble) {
-    Serial.print(val >= 0 ? "+" : "");
-    Serial.print(val);
+    SERIAL.print(val >= 0 ? "+" : "");
+    SERIAL.print(val);
   } else {
-    Serial.print(int(val));
+    SERIAL.print(int(val));
   }
 
-  Serial.print("; ");
+  SERIAL.print("; ");
 }
